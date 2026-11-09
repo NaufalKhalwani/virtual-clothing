@@ -13,6 +13,60 @@ type GLTFResult = GLTF & {
   materials: Record<string, THREE.Material>;
 };
 
+// Panel configuration with target mesh IDs and calibrated 3D Decal coordinates
+const PANEL_DECAL_CONFIG: Record<
+  JerseyPanel,
+  {
+    targetMesh: string;
+    position: [number, number, number];
+    rotation: [number, number, number];
+    scale: [number, number, number];
+  }
+> = {
+  // Front Body (V-neck chest & stomach)
+  front: {
+    targetMesh: 'Cloth_mesh_12',
+    position: [0, 1.35, -0.14],
+    rotation: [0, 0, 0],
+    scale: [0.26, 0.32, 0.2],
+  },
+  // Back Body (Upper back, squad number, player name)
+  back: {
+    targetMesh: 'Cloth_mesh_18',
+    position: [0, 1.35, 0.12],
+    rotation: [0, Math.PI, 0],
+    scale: [0.26, 0.32, 0.2],
+  },
+  // Left Sleeve
+  left: {
+    targetMesh: 'Cloth_mesh_3',
+    position: [-0.22, 1.44, -0.04],
+    rotation: [0, -Math.PI / 2, 0],
+    scale: [0.16, 0.18, 0.16],
+  },
+  // Right Sleeve
+  right: {
+    targetMesh: 'Cloth_mesh',
+    position: [0.22, 1.44, -0.04],
+    rotation: [0, Math.PI / 2, 0],
+    scale: [0.16, 0.18, 0.16],
+  },
+  // Left Shoulder (Raglan shoulder seam)
+  leftShoulder: {
+    targetMesh: 'Cloth_mesh_27',
+    position: [-0.08, 1.58, -0.02],
+    rotation: [-Math.PI / 6, -Math.PI / 4, 0],
+    scale: [0.12, 0.14, 0.12],
+  },
+  // Right Shoulder (Raglan shoulder seam)
+  rightShoulder: {
+    targetMesh: 'Cloth_mesh_24',
+    position: [0.08, 1.58, -0.02],
+    rotation: [-Math.PI / 6, Math.PI / 4, 0],
+    scale: [0.12, 0.14, 0.12],
+  },
+};
+
 export const JerseyModel: React.FC = () => {
   const gltf = useGLTF(JERSEY_MODEL_PATH) as unknown as GLTFResult;
   const baseColor = useDesignerStore((state) => state.baseColor);
@@ -29,48 +83,94 @@ export const JerseyModel: React.FC = () => {
     rightShoulder: null,
   });
 
-  // Find the primary jersey mesh
-  const jerseyMesh = useMemo<THREE.Mesh | null>(() => {
-    if (!gltf || !gltf.scene) return null;
-    let found: THREE.Mesh | null = null;
-    gltf.scene.traverse((child) => {
-      if (!found && (child as THREE.Mesh).isMesh) {
-        found = child as THREE.Mesh;
-      }
-    });
-    return found;
-  }, [gltf]);
-
-  // Clone and adapt PBR fabric material
-  const jerseyMaterial = useMemo(() => {
-    if (jerseyMesh && jerseyMesh.material) {
-      const orig = Array.isArray(jerseyMesh.material) ? jerseyMesh.material[0] : jerseyMesh.material;
-      const mat = orig.clone() as THREE.MeshStandardMaterial;
-      mat.roughness = 0.6;
-      mat.metalness = 0.1;
-      mat.side = THREE.DoubleSide;
-      return mat;
-    }
+  // Dedicated PBR Fabric material for Jersey Body
+  const fabricMaterial = useMemo(() => {
     return new THREE.MeshStandardMaterial({
       color: '#FFFFFF',
-      roughness: 0.6,
-      metalness: 0.1,
+      roughness: 0.65,
+      metalness: 0.05,
       side: THREE.DoubleSide,
     });
-  }, [jerseyMesh]);
+  }, []);
 
-  // Sync fabric color and wireframe
+  // Dedicated PBR material for V-neck Collar & Rib Trims (Bisban)
+  const collarMaterial = useMemo(() => {
+    return new THREE.MeshStandardMaterial({
+      color: '#FFFFFF',
+      roughness: 0.7,
+      metalness: 0.05,
+      side: THREE.DoubleSide,
+    });
+  }, []);
+
+  // Stitching & Trim material
+  const trimMaterial = useMemo(() => {
+    return new THREE.MeshStandardMaterial({
+      color: '#E2E8F0',
+      roughness: 0.8,
+      metalness: 0.0,
+      side: THREE.DoubleSide,
+    });
+  }, []);
+
+  // Sync fabric color and wireframe dynamically
   useEffect(() => {
-    if (jerseyMaterial) {
-      jerseyMaterial.color = new THREE.Color(baseColor);
-      jerseyMaterial.wireframe = wireframe;
-      jerseyMaterial.needsUpdate = true;
+    fabricMaterial.color.set(baseColor);
+    fabricMaterial.wireframe = wireframe;
+    fabricMaterial.needsUpdate = true;
+
+    collarMaterial.color.set(baseColor);
+    collarMaterial.wireframe = wireframe;
+    collarMaterial.needsUpdate = true;
+
+    trimMaterial.wireframe = wireframe;
+    trimMaterial.needsUpdate = true;
+  }, [baseColor, wireframe, fabricMaterial, collarMaterial, trimMaterial]);
+
+  // Extract all meshes from GLTF hierarchy
+  const { targetMeshes, otherMeshes } = useMemo(() => {
+    if (!gltf || !gltf.scene) {
+      return { targetMeshes: {} as Record<JerseyPanel, THREE.Mesh>, otherMeshes: [] as THREE.Mesh[] };
     }
-  }, [baseColor, wireframe, jerseyMaterial]);
 
-  // Synchronize 6 panel textures
+    const targets: Record<string, THREE.Mesh> = {};
+    const others: THREE.Mesh[] = [];
+
+    const targetNames = Object.values(PANEL_DECAL_CONFIG).map((c) => c.targetMesh);
+
+    gltf.scene.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        if (targetNames.includes(mesh.name)) {
+          // Find panel key
+          const panelKey = (Object.keys(PANEL_DECAL_CONFIG) as JerseyPanel[]).find(
+            (k) => PANEL_DECAL_CONFIG[k].targetMesh === mesh.name
+          );
+          if (panelKey) {
+            targets[panelKey] = mesh;
+          }
+        } else {
+          others.push(mesh);
+        }
+      }
+    });
+
+    return {
+      targetMeshes: targets as Record<JerseyPanel, THREE.Mesh>,
+      otherMeshes: others,
+    };
+  }, [gltf]);
+
+  // Synchronize 6 panel textures from Fabric.js 2D canvas Data URLs
   useEffect(() => {
-    const surfaceKeys: JerseyPanel[] = ['front', 'back', 'left', 'right', 'leftShoulder', 'rightShoulder'];
+    const surfaceKeys: JerseyPanel[] = [
+      'front',
+      'back',
+      'left',
+      'right',
+      'leftShoulder',
+      'rightShoulder',
+    ];
     const loader = new THREE.TextureLoader();
 
     surfaceKeys.forEach((key) => {
@@ -97,105 +197,171 @@ export const JerseyModel: React.FC = () => {
         },
         undefined,
         (err) => {
-          console.error(`Error loading texture for jersey surface ${key}:`, err);
+          console.error(`Error loading texture for jersey panel ${key}:`, err);
         }
       );
     });
   }, [surfaces]);
 
-  // Cleanup on unmount
+  // Cleanup GPU materials & textures on unmount
   useEffect(() => {
     return () => {
-      jerseyMaterial.dispose();
+      fabricMaterial.dispose();
+      collarMaterial.dispose();
+      trimMaterial.dispose();
       Object.values(panelTextures).forEach((tex) => tex?.dispose());
     };
-  }, [jerseyMaterial, panelTextures]);
+  }, [fabricMaterial, collarMaterial, trimMaterial, panelTextures]);
 
-  if (!jerseyMesh) {
+  if (!gltf || !gltf.scene) {
     return null;
   }
 
   return (
     <Center top>
-      <group dispose={null}>
-        <mesh
-          castShadow
-          receiveShadow
-          geometry={jerseyMesh.geometry}
-          material={jerseyMaterial}
-        >
-          {/* 1. Front Decal */}
-          {panelTextures.front && (
-            <Decal
-              position={[0, 0.04, 0.15]}
-              rotation={[0, 0, 0]}
-              scale={[0.26, 0.32, 0.2]}
-              map={panelTextures.front}
-              depthTest={true}
-              polygonOffsetFactor={-1}
-            />
-          )}
+      <group rotation={[0, Math.PI, 0]} dispose={null}>
+        {/* 1. Front Body Mesh with Front Decal */}
+        {targetMeshes.front && (
+          <mesh
+            castShadow
+            receiveShadow
+            geometry={targetMeshes.front.geometry}
+            material={fabricMaterial}
+          >
+            {panelTextures.front && (
+              <Decal
+                position={PANEL_DECAL_CONFIG.front.position}
+                rotation={PANEL_DECAL_CONFIG.front.rotation}
+                scale={PANEL_DECAL_CONFIG.front.scale}
+                map={panelTextures.front}
+                depthTest={true}
+                polygonOffsetFactor={-1}
+              />
+            )}
+          </mesh>
+        )}
 
-          {/* 2. Back Decal */}
-          {panelTextures.back && (
-            <Decal
-              position={[0, 0.04, -0.15]}
-              rotation={[0, Math.PI, 0]}
-              scale={[0.26, 0.32, 0.2]}
-              map={panelTextures.back}
-              depthTest={true}
-              polygonOffsetFactor={-1}
-            />
-          )}
+        {/* 2. Back Body Mesh with Back Decal */}
+        {targetMeshes.back && (
+          <mesh
+            castShadow
+            receiveShadow
+            geometry={targetMeshes.back.geometry}
+            material={fabricMaterial}
+          >
+            {panelTextures.back && (
+              <Decal
+                position={PANEL_DECAL_CONFIG.back.position}
+                rotation={PANEL_DECAL_CONFIG.back.rotation}
+                scale={PANEL_DECAL_CONFIG.back.scale}
+                map={panelTextures.back}
+                depthTest={true}
+                polygonOffsetFactor={-1}
+              />
+            )}
+          </mesh>
+        )}
 
-          {/* 3. Left Sleeve Decal */}
-          {panelTextures.left && (
-            <Decal
-              position={[-0.22, 0.08, 0]}
-              rotation={[0, -Math.PI / 2, 0]}
-              scale={[0.16, 0.18, 0.15]}
-              map={panelTextures.left}
-              depthTest={true}
-              polygonOffsetFactor={-1}
-            />
-          )}
+        {/* 3. Left Sleeve Mesh with Left Decal */}
+        {targetMeshes.left && (
+          <mesh
+            castShadow
+            receiveShadow
+            geometry={targetMeshes.left.geometry}
+            material={fabricMaterial}
+          >
+            {panelTextures.left && (
+              <Decal
+                position={PANEL_DECAL_CONFIG.left.position}
+                rotation={PANEL_DECAL_CONFIG.left.rotation}
+                scale={PANEL_DECAL_CONFIG.left.scale}
+                map={panelTextures.left}
+                depthTest={true}
+                polygonOffsetFactor={-1}
+              />
+            )}
+          </mesh>
+        )}
 
-          {/* 4. Right Sleeve Decal */}
-          {panelTextures.right && (
-            <Decal
-              position={[0.22, 0.08, 0]}
-              rotation={[0, Math.PI / 2, 0]}
-              scale={[0.16, 0.18, 0.15]}
-              map={panelTextures.right}
-              depthTest={true}
-              polygonOffsetFactor={-1}
-            />
-          )}
+        {/* 4. Right Sleeve Mesh with Right Decal */}
+        {targetMeshes.right && (
+          <mesh
+            castShadow
+            receiveShadow
+            geometry={targetMeshes.right.geometry}
+            material={fabricMaterial}
+          >
+            {panelTextures.right && (
+              <Decal
+                position={PANEL_DECAL_CONFIG.right.position}
+                rotation={PANEL_DECAL_CONFIG.right.rotation}
+                scale={PANEL_DECAL_CONFIG.right.scale}
+                map={panelTextures.right}
+                depthTest={true}
+                polygonOffsetFactor={-1}
+              />
+            )}
+          </mesh>
+        )}
 
-          {/* 5. Left Shoulder Decal */}
-          {panelTextures.leftShoulder && (
-            <Decal
-              position={[-0.14, 0.22, 0]}
-              rotation={[-Math.PI / 6, -Math.PI / 4, 0]}
-              scale={[0.12, 0.14, 0.12]}
-              map={panelTextures.leftShoulder}
-              depthTest={true}
-              polygonOffsetFactor={-1}
-            />
-          )}
+        {/* 5. Left Shoulder Mesh with Left Shoulder Decal */}
+        {targetMeshes.leftShoulder && (
+          <mesh
+            castShadow
+            receiveShadow
+            geometry={targetMeshes.leftShoulder.geometry}
+            material={fabricMaterial}
+          >
+            {panelTextures.leftShoulder && (
+              <Decal
+                position={PANEL_DECAL_CONFIG.leftShoulder.position}
+                rotation={PANEL_DECAL_CONFIG.leftShoulder.rotation}
+                scale={PANEL_DECAL_CONFIG.leftShoulder.scale}
+                map={panelTextures.leftShoulder}
+                depthTest={true}
+                polygonOffsetFactor={-1}
+              />
+            )}
+          </mesh>
+        )}
 
-          {/* 6. Right Shoulder Decal */}
-          {panelTextures.rightShoulder && (
-            <Decal
-              position={[0.14, 0.22, 0]}
-              rotation={[-Math.PI / 6, Math.PI / 4, 0]}
-              scale={[0.12, 0.14, 0.12]}
-              map={panelTextures.rightShoulder}
-              depthTest={true}
-              polygonOffsetFactor={-1}
+        {/* 6. Right Shoulder Mesh with Right Shoulder Decal */}
+        {targetMeshes.rightShoulder && (
+          <mesh
+            castShadow
+            receiveShadow
+            geometry={targetMeshes.rightShoulder.geometry}
+            material={fabricMaterial}
+          >
+            {panelTextures.rightShoulder && (
+              <Decal
+                position={PANEL_DECAL_CONFIG.rightShoulder.position}
+                rotation={PANEL_DECAL_CONFIG.rightShoulder.rotation}
+                scale={PANEL_DECAL_CONFIG.rightShoulder.scale}
+                map={panelTextures.rightShoulder}
+                depthTest={true}
+                polygonOffsetFactor={-1}
+              />
+            )}
+          </mesh>
+        )}
+
+        {/* 7. All other jersey elements (V-neck collar rib, hems, inner thickness, stitches) */}
+        {otherMeshes.map((mesh) => {
+          const matName = Array.isArray(mesh.material) ? mesh.material[0]?.name : mesh.material?.name;
+          const isCollar = mesh.name.includes('Cloth_mesh_6') || matName?.includes('BISBAN');
+          const isStitch = mesh.name.includes('BindedTrim');
+
+          return (
+            <mesh
+              key={mesh.name}
+              castShadow
+              receiveShadow
+              geometry={mesh.geometry}
+              material={isCollar ? collarMaterial : isStitch ? trimMaterial : fabricMaterial}
             />
-          )}
-        </mesh>
+          );
+        })}
       </group>
     </Center>
   );

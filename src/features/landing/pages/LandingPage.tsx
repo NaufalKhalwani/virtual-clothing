@@ -156,23 +156,23 @@ export const LandingPage: React.FC = () => {
                   <div className="w-12 h-12 rounded-2xl bg-slate-800 dark:bg-slate-700 text-white flex items-center justify-center shadow-xs">
                     <Layers className="w-6 h-6" />
                   </div>
-                  <span className="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 text-xs font-semibold">
-                    6 Design Panels Ready
+                  <span className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold">
+                    Active • 3D V-Neck Mesh Live
                   </span>
                 </div>
 
                 <h3 className="text-2xl font-bold text-neutral-900 dark:text-white mb-2">
-                  Sports Jersey
+                  V-Neck Sports Jersey
                 </h3>
 
                 <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed mb-6">
-                  Multi-panel athletic jersey with 6 independent customizable surfaces: Front, Back, Left & Right Sleeves, and Dual Shoulders.
+                  Authentic athletic V-neck jersey with 6 independent customizable surfaces: Front, Back, Left & Right Sleeves, and Raglan Shoulders.
                 </p>
 
                 <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-neutral-200/70 dark:border-slate-800 mb-8 space-y-2.5 text-xs text-neutral-600 dark:text-neutral-400">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                    <span>6-surface architecture: Front, Back, Left, Right & Shoulders</span>
+                    <span>Validated 3D V-neck mesh with athletic cloth geometry & rib collar</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
