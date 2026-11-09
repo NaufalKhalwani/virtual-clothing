@@ -9,12 +9,14 @@ import {
   FolderKanban,
   LogOut,
   LogIn,
+  Download,
 } from 'lucide-react';
 import { useDesignerStore } from '@/stores/designer.store';
 import { useAuthStore } from '@/stores/auth.store';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { AuthModal } from '@/features/auth/components/AuthModal';
 import { SaveProjectModal } from '@/features/projects/components/SaveProjectModal';
+import { ExportModal } from '@/features/export/components/ExportModal';
 
 export const Header: React.FC = () => {
   const location = useLocation();
@@ -30,6 +32,7 @@ export const Header: React.FC = () => {
   const signOut = useAuthStore((state) => state.signOut);
 
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   // Warn on browser tab close/reload if there are unsaved modifications
@@ -134,6 +137,17 @@ export const Header: React.FC = () => {
                 <Save className="w-3.5 h-3.5" />
                 <span>{isSaving ? 'Saving...' : 'Save'}</span>
                 {isDirty && <span className="w-1.5 h-1.5 rounded-full bg-white opacity-80" />}
+              </button>
+
+              {/* Export Assets Button */}
+              <button
+                type="button"
+                onClick={() => setIsExportModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-neutral-700 dark:text-neutral-200 hover:text-neutral-900 dark:hover:text-white bg-neutral-100 dark:bg-slate-800 hover:bg-neutral-200 dark:hover:bg-slate-700 border border-neutral-300/80 dark:border-slate-700 rounded-lg shadow-xs transition-colors"
+                title="Export 2D artwork, 3D mockups, or baked UV textures"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Export</span>
               </button>
 
               <button
@@ -242,6 +256,7 @@ export const Header: React.FC = () => {
       {/* Global Modals */}
       <AuthModal />
       <SaveProjectModal isOpen={isSaveModalOpen} onClose={() => setIsSaveModalOpen(false)} />
+      <ExportModal isOpen={isExportModalOpen} onClose={() => setIsExportModalOpen(false)} />
     </>
   );
 };
