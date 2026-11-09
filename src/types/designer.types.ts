@@ -90,6 +90,7 @@ export interface DesignerState {
   selectElement: (id: string | null) => void;
   resetSurface: (surface: string) => void;
   resetAll: () => void;
+  startNewProject: (garmentType?: GarmentType) => void;
 
   // Project persistence actions
   setCurrentProject: (id: string | null, name: string) => void;

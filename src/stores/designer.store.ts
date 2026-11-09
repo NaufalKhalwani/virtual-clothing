@@ -268,6 +268,39 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     }
   },
 
+  startNewProject: (garmentType?: GarmentType) => {
+    const target = garmentType || get().garmentType;
+    if (target === 'jersey') {
+      const newJersey = createDefaultJerseySurfaces();
+      set({
+        garmentType: 'jersey',
+        baseColor: DEFAULT_TSHIRT_COLOR,
+        jerseySurfaces: newJersey,
+        surfaces: newJersey,
+        selectedSurface: 'front',
+        selectedElementId: null,
+        currentProjectId: null,
+        currentProjectName: 'Untitled Design',
+        isDirty: false,
+        history: { past: [], future: [] },
+      });
+    } else {
+      const newTShirt = createDefaultTShirtSurfaces();
+      set({
+        garmentType: 'tshirt',
+        baseColor: DEFAULT_TSHIRT_COLOR,
+        tshirtSurfaces: newTShirt,
+        surfaces: newTShirt,
+        selectedSurface: 'front',
+        selectedElementId: null,
+        currentProjectId: null,
+        currentProjectName: 'Untitled Design',
+        isDirty: false,
+        history: { past: [], future: [] },
+      });
+    }
+  },
+
   setCurrentProject: (id: string | null, name: string) => {
     set({ currentProjectId: id, currentProjectName: name });
   },

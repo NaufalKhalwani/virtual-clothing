@@ -29,6 +29,7 @@ export const ProjectsPage: React.FC = () => {
   const openAuthModal = useAuthStore((state) => state.openAuthModal);
 
   const loadProjectData = useDesignerStore((state) => state.loadProjectData);
+  const startNewProject = useDesignerStore((state) => state.startNewProject);
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -130,20 +131,28 @@ export const ProjectsPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <Link
-              to="/designer/tshirt"
+            <button
+              type="button"
+              onClick={() => {
+                startNewProject('tshirt');
+                navigate('/designer/tshirt');
+              }}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-neutral-100 dark:hover:bg-slate-700 text-neutral-800 dark:text-neutral-200 text-xs font-semibold rounded-xl border border-neutral-200 dark:border-slate-700 shadow-2xs transition-colors"
             >
               <Shirt className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
               <span>+ New T-Shirt</span>
-            </Link>
-            <Link
-              to="/designer/jersey"
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                startNewProject('jersey');
+                navigate('/designer/jersey');
+              }}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors"
             >
               <Layers className="w-3.5 h-3.5" />
               <span>+ New Jersey</span>
-            </Link>
+            </button>
           </div>
         </div>
 

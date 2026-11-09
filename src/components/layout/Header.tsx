@@ -10,6 +10,7 @@ import {
   LogOut,
   LogIn,
   Download,
+  FolderPlus,
 } from 'lucide-react';
 import { useDesignerStore } from '@/stores/designer.store';
 import { useAuthStore } from '@/stores/auth.store';
@@ -23,6 +24,7 @@ export const Header: React.FC = () => {
   const isDesigner = location.pathname.startsWith('/designer/');
   const garmentType = useDesignerStore((state) => state.garmentType);
   const resetAll = useDesignerStore((state) => state.resetAll);
+  const startNewProject = useDesignerStore((state) => state.startNewProject);
   const currentProjectName = useDesignerStore((state) => state.currentProjectName);
   const isDirty = useDesignerStore((state) => state.isDirty);
   const isSaving = useDesignerStore((state) => state.isSaving);
@@ -137,6 +139,22 @@ export const Header: React.FC = () => {
                 <Save className="w-3.5 h-3.5" />
                 <span>{isSaving ? 'Saving...' : 'Save'}</span>
                 {isDirty && <span className="w-1.5 h-1.5 rounded-full bg-white opacity-80" />}
+              </button>
+
+              {/* Start New Project Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (isDirty && !window.confirm('Start a new design? Any unsaved modifications on the current canvas will be cleared.')) {
+                    return;
+                  }
+                  startNewProject();
+                }}
+                className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-slate-800 rounded-lg transition-colors border border-neutral-200 dark:border-slate-700"
+                title="Start a new blank project"
+              >
+                <FolderPlus className="w-3.5 h-3.5" />
+                <span>New</span>
               </button>
 
               {/* Export Assets Button */}

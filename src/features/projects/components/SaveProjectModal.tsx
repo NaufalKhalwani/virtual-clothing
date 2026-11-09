@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDesignerStore } from '@/stores/designer.store';
 import { useAuthStore } from '@/stores/auth.store';
 import { projectService } from '@/services/supabase/project.service';
 import { storageService } from '@/services/supabase/storage.service';
 import type { ProjectDesignData } from '@/types/project.types';
-import { X, Save, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { X, Save, AlertCircle, CheckCircle2, PlusCircle, RefreshCw } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -27,14 +27,28 @@ export const SaveProjectModal: React.FC<Props> = ({ isOpen, onClose, onSaved }) 
   const setIsSaving = useDesignerStore((state) => state.setIsSaving);
   const isSaving = useDesignerStore((state) => state.isSaving);
 
-  const [projectName, setProjectName] = useState(
-    currentProjectName === 'Untitled Design'
-      ? `${garmentType === 'jersey' ? 'Jersey' : 'T-Shirt'} Design ${new Date().toLocaleDateString()}`
-      : currentProjectName
-  );
+  const [saveMode, setSaveMode] = useState<'update' | 'new'>('new');
+  const [projectName, setProjectName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
   const [isLocalSaved, setIsLocalSaved] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setError(null);
+      setSuccess(false);
+      setIsLocalSaved(false);
+      if (currentProjectId) {
+        setSaveMode('update');
+        setProjectName(currentProjectName);
+      } else {
+        setSaveMode('new');
+        setProjectName(
+          `${garmentType === 'jersey' ? 'Jersey' : 'T-Shirt'} Design ${new Date().toLocaleDateString()}`
+        );
+      }
+    }
+  }, [isOpen, currentProjectId, currentProjectName, garmentType]);
 
   if (!isOpen) return null;
 
@@ -81,15 +95,15 @@ export const SaveProjectModal: React.FC<Props> = ({ isOpen, onClose, onSaved }) 
       if (thumbnailSource) {
         const thumbResult = await storageService.uploadThumbnail(
           user.id,
-          currentProjectId || `thumb_${Date.now()}`,
+          saveMode === 'update' && currentProjectId ? currentProjectId : `thumb_${Date.now()}`,
           thumbnailSource
         );
-        thumbnailUrl = thumbResult.url;
+        thumbnailUrl = thumbResult.url || thumbnailSource;
       }
 
       let isFallback = false;
 
-      if (currentProjectId) {
+      if (saveMode === 'update' && currentProjectId) {
         // Update existing project
         const { data, error: updateErr, isLocalFallback } = await projectService.updateProject(currentProjectId, {
           name: projectName.trim(),
@@ -108,7 +122,7 @@ export const SaveProjectModal: React.FC<Props> = ({ isOpen, onClose, onSaved }) 
         setSuccess(true);
         if (onSaved) onSaved(data.id, data.name);
       } else {
-        // Create new project
+        // Create brand new project!
         const { data, error: createErr, isLocalFallback } = await projectService.createProject(user.id, {
           name: projectName.trim(),
           garment_type: garmentType,
@@ -177,10 +191,14 @@ export const SaveProjectModal: React.FC<Props> = ({ isOpen, onClose, onSaved }) 
           <div className="mb-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-xs text-emerald-700 dark:text-emerald-300 flex items-start gap-2">
             <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
             <div>
-              <p className="font-semibold">Project successfully saved!</p>
+              <p className="font-semibold">
+                {saveMode === 'update' && currentProjectId
+                  ? 'Project successfully updated!'
+                  : 'New project successfully created!'}
+              </p>
               {isLocalSaved && (
                 <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-1">
-                  Saved to local storage (remote Supabase table &apos;public.projects&apos; is awaiting migration in SQL Editor).
+                  Saved to local storage (remote Supabase table &apos;public.projects&apos; is awaiting migration).
                 </p>
               )}
             </div>
@@ -188,6 +206,58 @@ export const SaveProjectModal: React.FC<Props> = ({ isOpen, onClose, onSaved }) 
         )}
 
         <form onSubmit={handleSave} className="space-y-4">
+          {/* Action Choice: Update Current vs Save as New Project */}
+          {currentProjectId && (
+            <div>
+              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
+                Save Action
+              </label>
+              <div className="grid grid-cols-2 gap-2 p-1 bg-neutral-100 dark:bg-slate-800 rounded-2xl border border-neutral-200 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSaveMode('update');
+                    setProjectName(currentProjectName);
+                  }}
+                  className={`flex flex-col items-center justify-center py-2 px-2.5 rounded-xl text-xs transition-all ${
+                    saveMode === 'update'
+                      ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 font-bold shadow-2xs'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-1">
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span className="font-semibold text-xs">Update Current</span>
+                  </div>
+                  <span className="text-[10px] opacity-75 truncate max-w-[130px] mt-0.5">
+                    ({currentProjectName})
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSaveMode('new');
+                    setProjectName(`${currentProjectName} (Copy)`);
+                  }}
+                  className={`flex flex-col items-center justify-center py-2 px-2.5 rounded-xl text-xs transition-all ${
+                    saveMode === 'new'
+                      ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 font-bold shadow-2xs'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-1">
+                    <PlusCircle className="w-3.5 h-3.5" />
+                    <span className="font-semibold text-xs">+ Save as New</span>
+                  </div>
+                  <span className="text-[10px] opacity-75 truncate max-w-[130px] mt-0.5">
+                    Create new entry
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
               Project Name
@@ -247,7 +317,11 @@ export const SaveProjectModal: React.FC<Props> = ({ isOpen, onClose, onSaved }) 
               ) : (
                 <>
                   <Save className="w-3.5 h-3.5" />
-                  <span>Save Project</span>
+                  <span>
+                    {saveMode === 'update' && currentProjectId
+                      ? 'Update Project'
+                      : '+ Save as New Project'}
+                  </span>
                 </>
               )}
             </button>
