@@ -31,6 +31,7 @@ export const JerseyModel: React.FC = () => {
 
   // Find the primary jersey mesh
   const jerseyMesh = useMemo<THREE.Mesh | null>(() => {
+    if (!gltf || !gltf.scene) return null;
     let found: THREE.Mesh | null = null;
     gltf.scene.traverse((child) => {
       if (!found && (child as THREE.Mesh).isMesh) {
@@ -38,7 +39,7 @@ export const JerseyModel: React.FC = () => {
       }
     });
     return found;
-  }, [gltf.scene]);
+  }, [gltf]);
 
   // Clone and adapt PBR fabric material
   const jerseyMaterial = useMemo(() => {
