@@ -13,7 +13,7 @@ export const TShirtEditorPage: React.FC = () => {
   }, [setGarmentType]);
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-white">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-white dark:bg-slate-950 transition-colors duration-200">
       {/* Top Header */}
       <Header />
 
@@ -25,7 +25,7 @@ export const TShirtEditorPage: React.FC = () => {
         </div>
 
         {/* Center 3D Viewport */}
-        <main className="flex-1 p-3 md:p-4 min-h-0 min-w-0 flex flex-col relative bg-neutral-100/60">
+        <main className="flex-1 p-3 md:p-4 min-h-0 min-w-0 flex flex-col relative bg-neutral-100/60 dark:bg-slate-950">
           <Viewer3D />
         </main>
 

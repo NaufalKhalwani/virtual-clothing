@@ -26,6 +26,7 @@ export const ArtworkCanvas: React.FC<ArtworkCanvasProps> = ({
   const surfaces = useDesignerStore((state) => state.surfaces);
   const setSurfaceTexture = useDesignerStore((state) => state.setSurfaceTexture);
   const selectElement = useDesignerStore((state) => state.selectElement);
+  const pushHistory = useDesignerStore((state) => state.pushHistory);
 
   // Synchronize canvas to 3D texture and store
   const syncTexture = useCallback(() => {
@@ -54,15 +55,18 @@ export const ArtworkCanvas: React.FC<ArtworkCanvasProps> = ({
     const fabricCanvas = createFabricCanvas(canvasElRef.current, CANVAS_SIZE);
     fabricRef.current = fabricCanvas;
 
-    // Attach event listeners for real-time synchronization
-    const handleModified = () => {
+    const handleTransformationEnd = () => {
+      pushHistory();
+      syncTexture();
+    };
+
+    const handleActiveMoving = () => {
       syncTexture();
     };
 
     const handleSelection = (e: { selected?: FabricObject[] }) => {
       if (e.selected && e.selected.length > 0) {
         const obj = e.selected[0];
-        // Identify object ID or generate one
         const customId = (obj as unknown as { id?: string }).id || `obj_${Date.now()}`;
         (obj as unknown as { id: string }).id = customId;
         selectElement(customId);
@@ -75,10 +79,10 @@ export const ArtworkCanvas: React.FC<ArtworkCanvasProps> = ({
       selectElement(null);
     };
 
-    fabricCanvas.on('object:modified', handleModified);
-    fabricCanvas.on('object:moving', handleModified);
-    fabricCanvas.on('object:scaling', handleModified);
-    fabricCanvas.on('object:rotating', handleModified);
+    fabricCanvas.on('object:modified', handleTransformationEnd);
+    fabricCanvas.on('object:moving', handleActiveMoving);
+    fabricCanvas.on('object:scaling', handleActiveMoving);
+    fabricCanvas.on('object:rotating', handleActiveMoving);
     fabricCanvas.on('selection:created', handleSelection);
     fabricCanvas.on('selection:updated', handleSelection);
     fabricCanvas.on('selection:cleared', handleSelectionCleared);
@@ -125,13 +129,13 @@ export const ArtworkCanvas: React.FC<ArtworkCanvasProps> = ({
   }, [selectedSurface]);
 
   return (
-    <div className="relative w-full max-w-[320px] aspect-square mx-auto rounded-2xl bg-neutral-100/80 p-3 border border-neutral-200/80 shadow-inner flex items-center justify-center">
+    <div className="relative w-full max-w-[320px] aspect-square mx-auto rounded-2xl bg-neutral-100/80 dark:bg-slate-800/70 p-3 border border-neutral-200/80 dark:border-slate-700/80 shadow-inner flex items-center justify-center transition-colors duration-200">
       {/* Decorative T-shirt printable boundary */}
-      <div className="absolute inset-4 rounded-xl border border-dashed border-neutral-300 pointer-events-none flex flex-col justify-between p-2">
-        <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-widest text-center">
+      <div className="absolute inset-4 rounded-xl border border-dashed border-neutral-300 dark:border-slate-600 pointer-events-none flex flex-col justify-between p-2">
+        <span className="text-[10px] font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest text-center">
           {selectedSurface} Printable Boundary
         </span>
-        <div className="flex justify-between text-[9px] text-neutral-300 font-mono">
+        <div className="flex justify-between text-[9px] text-neutral-300 dark:text-slate-600 font-mono">
           <span>+</span>
           <span>+</span>
         </div>

@@ -2,10 +2,22 @@ import { create } from 'zustand';
 import type { DesignerState, DesignElement, GarmentType, SurfaceDesign } from '@/types/designer.types';
 import { DEFAULT_TSHIRT_COLOR } from '@/constants/design.constants';
 
-const createDefaultSurfaces = (): Record<string, SurfaceDesign> => ({
+const createDefaultTShirtSurfaces = (): Record<string, SurfaceDesign> => ({
   front: { color: DEFAULT_TSHIRT_COLOR, elements: [], textureDataUrl: null, canvasJson: null },
   back: { color: DEFAULT_TSHIRT_COLOR, elements: [], textureDataUrl: null, canvasJson: null },
 });
+
+const createDefaultJerseySurfaces = (): Record<string, SurfaceDesign> => ({
+  front: { color: DEFAULT_TSHIRT_COLOR, elements: [], textureDataUrl: null, canvasJson: null },
+  back: { color: DEFAULT_TSHIRT_COLOR, elements: [], textureDataUrl: null, canvasJson: null },
+  left: { color: DEFAULT_TSHIRT_COLOR, elements: [], textureDataUrl: null, canvasJson: null },
+  right: { color: DEFAULT_TSHIRT_COLOR, elements: [], textureDataUrl: null, canvasJson: null },
+  leftShoulder: { color: DEFAULT_TSHIRT_COLOR, elements: [], textureDataUrl: null, canvasJson: null },
+  rightShoulder: { color: DEFAULT_TSHIRT_COLOR, elements: [], textureDataUrl: null, canvasJson: null },
+});
+
+const initialTShirtSurfaces = createDefaultTShirtSurfaces();
+const initialJerseySurfaces = createDefaultJerseySurfaces();
 
 export const useDesignerStore = create<DesignerState>((set, get) => ({
   garmentType: 'tshirt',
@@ -13,7 +25,9 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   selectedElementId: null,
   baseColor: DEFAULT_TSHIRT_COLOR,
   isDirty: false,
-  surfaces: createDefaultSurfaces(),
+  tshirtSurfaces: initialTShirtSurfaces,
+  jerseySurfaces: initialJerseySurfaces,
+  surfaces: initialTShirtSurfaces,
 
   history: {
     past: [],
@@ -21,27 +35,27 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   },
 
   setGarmentType: (type: GarmentType) => {
+    const state = get();
+    if (state.garmentType === type) return;
+
     if (type === 'jersey') {
+      // Save current surfaces to tshirtSurfaces before switching
       set({
         garmentType: 'jersey',
+        tshirtSurfaces: state.surfaces,
+        surfaces: state.jerseySurfaces,
         selectedSurface: 'front',
         selectedElementId: null,
-        surfaces: {
-          front: { color: DEFAULT_TSHIRT_COLOR, elements: [], textureDataUrl: null, canvasJson: null },
-          back: { color: DEFAULT_TSHIRT_COLOR, elements: [], textureDataUrl: null, canvasJson: null },
-          right: { color: DEFAULT_TSHIRT_COLOR, elements: [], textureDataUrl: null, canvasJson: null },
-          left: { color: DEFAULT_TSHIRT_COLOR, elements: [], textureDataUrl: null, canvasJson: null },
-          rightShoulder: { color: DEFAULT_TSHIRT_COLOR, elements: [], textureDataUrl: null, canvasJson: null },
-          leftShoulder: { color: DEFAULT_TSHIRT_COLOR, elements: [], textureDataUrl: null, canvasJson: null },
-        },
         history: { past: [], future: [] },
       });
     } else {
+      // Save current surfaces to jerseySurfaces before switching
       set({
         garmentType: 'tshirt',
+        jerseySurfaces: state.surfaces,
+        surfaces: state.tshirtSurfaces,
         selectedSurface: 'front',
         selectedElementId: null,
-        surfaces: createDefaultSurfaces(),
         history: { past: [], future: [] },
       });
     }
@@ -83,17 +97,19 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   setSurfaceTexture: (surface: string, dataUrl: string | null, canvasJson?: string | null) => {
     set((state) => {
       const surfaceData = state.surfaces[surface] || { color: state.baseColor, elements: [] };
-      return {
-        surfaces: {
-          ...state.surfaces,
-          [surface]: {
-            ...surfaceData,
-            textureDataUrl: dataUrl,
-            canvasJson: canvasJson !== undefined ? canvasJson : surfaceData.canvasJson,
-          },
+      const updated = {
+        ...state.surfaces,
+        [surface]: {
+          ...surfaceData,
+          textureDataUrl: dataUrl,
+          canvasJson: canvasJson !== undefined ? canvasJson : surfaceData.canvasJson,
         },
-        isDirty: true,
       };
+
+      if (state.garmentType === 'jersey') {
+        return { surfaces: updated, jerseySurfaces: updated, isDirty: true };
+      }
+      return { surfaces: updated, tshirtSurfaces: updated, isDirty: true };
     });
   },
 
@@ -101,17 +117,18 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     get().pushHistory();
     set((state) => {
       const surfaceData = state.surfaces[surface] || { color: state.baseColor, elements: [] };
-      return {
-        surfaces: {
-          ...state.surfaces,
-          [surface]: {
-            ...surfaceData,
-            elements: [...surfaceData.elements, element],
-          },
+      const updated = {
+        ...state.surfaces,
+        [surface]: {
+          ...surfaceData,
+          elements: [...surfaceData.elements, element],
         },
-        selectedElementId: element.id,
-        isDirty: true,
       };
+
+      if (state.garmentType === 'jersey') {
+        return { surfaces: updated, jerseySurfaces: updated, selectedElementId: element.id, isDirty: true };
+      }
+      return { surfaces: updated, tshirtSurfaces: updated, selectedElementId: element.id, isDirty: true };
     });
   },
 
@@ -120,18 +137,20 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       const surfaceData = state.surfaces[surface];
       if (!surfaceData) return state;
 
-      return {
-        surfaces: {
-          ...state.surfaces,
-          [surface]: {
-            ...surfaceData,
-            elements: surfaceData.elements.map((el) =>
-              el.id === elementId ? ({ ...el, ...updates } as DesignElement) : el
-            ),
-          },
+      const updated = {
+        ...state.surfaces,
+        [surface]: {
+          ...surfaceData,
+          elements: surfaceData.elements.map((el) =>
+            el.id === elementId ? ({ ...el, ...updates } as DesignElement) : el
+          ),
         },
-        isDirty: true,
       };
+
+      if (state.garmentType === 'jersey') {
+        return { surfaces: updated, jerseySurfaces: updated, isDirty: true };
+      }
+      return { surfaces: updated, tshirtSurfaces: updated, isDirty: true };
     });
   },
 
@@ -141,14 +160,25 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       const surfaceData = state.surfaces[surface];
       if (!surfaceData) return state;
 
-      return {
-        surfaces: {
-          ...state.surfaces,
-          [surface]: {
-            ...surfaceData,
-            elements: surfaceData.elements.filter((el) => el.id !== elementId),
-          },
+      const updated = {
+        ...state.surfaces,
+        [surface]: {
+          ...surfaceData,
+          elements: surfaceData.elements.filter((el) => el.id !== elementId),
         },
+      };
+
+      if (state.garmentType === 'jersey') {
+        return {
+          surfaces: updated,
+          jerseySurfaces: updated,
+          selectedElementId: state.selectedElementId === elementId ? null : state.selectedElementId,
+          isDirty: true,
+        };
+      }
+      return {
+        surfaces: updated,
+        tshirtSurfaces: updated,
         selectedElementId: state.selectedElementId === elementId ? null : state.selectedElementId,
         isDirty: true,
       };
@@ -173,17 +203,18 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
         zIndex: surfaceData.elements.length + 1,
       };
 
-      return {
-        surfaces: {
-          ...state.surfaces,
-          [surface]: {
-            ...surfaceData,
-            elements: [...surfaceData.elements, duplicated],
-          },
+      const updated = {
+        ...state.surfaces,
+        [surface]: {
+          ...surfaceData,
+          elements: [...surfaceData.elements, duplicated],
         },
-        selectedElementId: newId,
-        isDirty: true,
       };
+
+      if (state.garmentType === 'jersey') {
+        return { surfaces: updated, jerseySurfaces: updated, selectedElementId: newId, isDirty: true };
+      }
+      return { surfaces: updated, tshirtSurfaces: updated, selectedElementId: newId, isDirty: true };
     });
   },
 
@@ -191,8 +222,8 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
 
   resetSurface: (surface: string) => {
     get().pushHistory();
-    set((state) => ({
-      surfaces: {
+    set((state) => {
+      const updated = {
         ...state.surfaces,
         [surface]: {
           color: state.baseColor,
@@ -200,25 +231,41 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
           textureDataUrl: null,
           canvasJson: null,
         },
-      },
-      selectedElementId: null,
-      isDirty: true,
-    }));
+      };
+
+      if (state.garmentType === 'jersey') {
+        return { surfaces: updated, jerseySurfaces: updated, selectedElementId: null, isDirty: true };
+      }
+      return { surfaces: updated, tshirtSurfaces: updated, selectedElementId: null, isDirty: true };
+    });
   },
 
   resetAll: () => {
     get().pushHistory();
-    set({
-      baseColor: DEFAULT_TSHIRT_COLOR,
-      surfaces: createDefaultSurfaces(),
-      selectedElementId: null,
-      isDirty: false,
-    });
+    const state = get();
+    if (state.garmentType === 'jersey') {
+      const newJersey = createDefaultJerseySurfaces();
+      set({
+        baseColor: DEFAULT_TSHIRT_COLOR,
+        jerseySurfaces: newJersey,
+        surfaces: newJersey,
+        selectedElementId: null,
+        isDirty: false,
+      });
+    } else {
+      const newTShirt = createDefaultTShirtSurfaces();
+      set({
+        baseColor: DEFAULT_TSHIRT_COLOR,
+        tshirtSurfaces: newTShirt,
+        surfaces: newTShirt,
+        selectedElementId: null,
+        isDirty: false,
+      });
+    }
   },
 
   pushHistory: () => {
     const { surfaces, history } = get();
-    // Deep clone surfaces for immutable history entry
     const snapshot = JSON.parse(JSON.stringify(surfaces));
     set({
       history: {
@@ -229,7 +276,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   },
 
   undo: () => {
-    const { history, surfaces } = get();
+    const { history, surfaces, garmentType } = get();
     if (history.past.length === 0) return;
 
     const previous = history.past[history.past.length - 1];
@@ -238,6 +285,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
 
     set({
       surfaces: previous,
+      ...(garmentType === 'jersey' ? { jerseySurfaces: previous } : { tshirtSurfaces: previous }),
       selectedElementId: null,
       history: {
         past: newPast,
@@ -247,7 +295,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   },
 
   redo: () => {
-    const { history, surfaces } = get();
+    const { history, surfaces, garmentType } = get();
     if (history.future.length === 0) return;
 
     const next = history.future[0];
@@ -256,6 +304,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
 
     set({
       surfaces: next,
+      ...(garmentType === 'jersey' ? { jerseySurfaces: next } : { tshirtSurfaces: next }),
       selectedElementId: null,
       history: {
         past: [...history.past, currentSnapshot],

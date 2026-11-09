@@ -89,7 +89,6 @@ export const TextEditor: React.FC<TextEditorProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* If not currently selecting a text object, show quick add button */}
       {!isEditingSelected && (
         <button
           type="button"
@@ -103,7 +102,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({
 
       {/* Text Content Input */}
       <div>
-        <label className="text-xs font-semibold text-neutral-800 block mb-1.5">
+        <label className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 block mb-1.5">
           Text Content
         </label>
         <textarea
@@ -111,19 +110,19 @@ export const TextEditor: React.FC<TextEditorProps> = ({
           onChange={(e) => handleContentChange(e.target.value)}
           placeholder="Enter custom slogan, name, or text..."
           rows={2}
-          className="w-full px-3 py-2 text-xs border border-neutral-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all resize-none font-medium"
+          className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 text-neutral-900 dark:text-white border border-neutral-200 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all resize-none font-medium"
         />
       </div>
 
       {/* Font Family Selection */}
       <div>
-        <label className="text-xs font-semibold text-neutral-800 block mb-1.5">
+        <label className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 block mb-1.5">
           Font Family
         </label>
         <select
           value={fontFamily}
           onChange={(e) => handleFontChange(e.target.value)}
-          className="w-full px-3 py-2 text-xs bg-white border border-neutral-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-600 transition-all font-medium"
+          className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-800 text-neutral-900 dark:text-white border border-neutral-200 dark:border-slate-700 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-600 transition-all font-medium"
         >
           {AVAILABLE_FONTS.map((f) => (
             <option key={f.name} value={f.family} style={{ fontFamily: f.family }}>
@@ -137,8 +136,8 @@ export const TextEditor: React.FC<TextEditorProps> = ({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-xs font-semibold text-neutral-800">Size</span>
-            <span className="text-xs font-mono text-neutral-500">{fontSize}px</span>
+            <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">Size</span>
+            <span className="text-xs font-mono text-neutral-500 dark:text-neutral-400">{fontSize}px</span>
           </div>
           <input
             type="range"
@@ -146,20 +145,20 @@ export const TextEditor: React.FC<TextEditorProps> = ({
             max={120}
             value={fontSize}
             onChange={(e) => handleFontSizeChange(Number(e.target.value))}
-            className="w-full h-1.5 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+            className="w-full h-1.5 bg-neutral-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
           />
         </div>
 
         <div>
-          <span className="text-xs font-semibold text-neutral-800 block mb-1.5">Weight</span>
-          <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-lg">
+          <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 block mb-1.5">Weight</span>
+          <div className="flex items-center gap-1 bg-neutral-100 dark:bg-slate-800 p-1 rounded-lg">
             <button
               type="button"
               onClick={() => handleFontWeightChange('normal')}
               className={`flex-1 py-1 text-[11px] rounded transition-colors ${
                 fontWeight === 'normal' || fontWeight === 400
-                  ? 'bg-white font-normal text-neutral-900 shadow-2xs'
-                  : 'text-neutral-500 hover:text-neutral-900'
+                  ? 'bg-white dark:bg-slate-700 font-normal text-neutral-900 dark:text-white shadow-2xs'
+                  : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
               }`}
             >
               Regular
@@ -169,8 +168,8 @@ export const TextEditor: React.FC<TextEditorProps> = ({
               onClick={() => handleFontWeightChange('bold')}
               className={`flex-1 py-1 text-[11px] rounded transition-colors ${
                 fontWeight === 'bold' || fontWeight === 700
-                  ? 'bg-white font-bold text-neutral-900 shadow-2xs'
-                  : 'text-neutral-500 hover:text-neutral-900'
+                  ? 'bg-white dark:bg-slate-700 font-bold text-neutral-900 dark:text-white shadow-2xs'
+                  : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
               }`}
             >
               Bold
@@ -181,13 +180,13 @@ export const TextEditor: React.FC<TextEditorProps> = ({
 
       {/* Alignment */}
       <div>
-        <span className="text-xs font-semibold text-neutral-800 block mb-1.5">Alignment</span>
-        <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-xl">
+        <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 block mb-1.5">Alignment</span>
+        <div className="flex items-center gap-1 bg-neutral-100 dark:bg-slate-800 p-1 rounded-xl">
           <button
             type="button"
             onClick={() => handleAlignChange('left')}
             className={`flex-1 py-1.5 flex items-center justify-center rounded-lg transition-colors ${
-              textAlign === 'left' ? 'bg-white shadow-2xs text-blue-600' : 'text-neutral-500'
+              textAlign === 'left' ? 'bg-white dark:bg-slate-700 shadow-2xs text-blue-600 dark:text-blue-400' : 'text-neutral-500 dark:text-neutral-400'
             }`}
           >
             <AlignLeft className="w-4 h-4" />
@@ -196,7 +195,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({
             type="button"
             onClick={() => handleAlignChange('center')}
             className={`flex-1 py-1.5 flex items-center justify-center rounded-lg transition-colors ${
-              textAlign === 'center' ? 'bg-white shadow-2xs text-blue-600' : 'text-neutral-500'
+              textAlign === 'center' ? 'bg-white dark:bg-slate-700 shadow-2xs text-blue-600 dark:text-blue-400' : 'text-neutral-500 dark:text-neutral-400'
             }`}
           >
             <AlignCenter className="w-4 h-4" />
@@ -205,7 +204,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({
             type="button"
             onClick={() => handleAlignChange('right')}
             className={`flex-1 py-1.5 flex items-center justify-center rounded-lg transition-colors ${
-              textAlign === 'right' ? 'bg-white shadow-2xs text-blue-600' : 'text-neutral-500'
+              textAlign === 'right' ? 'bg-white dark:bg-slate-700 shadow-2xs text-blue-600 dark:text-blue-400' : 'text-neutral-500 dark:text-neutral-400'
             }`}
           >
             <AlignRight className="w-4 h-4" />
@@ -215,9 +214,9 @@ export const TextEditor: React.FC<TextEditorProps> = ({
 
       {/* Text Color Swatches */}
       <div>
-        <span className="text-xs font-semibold text-neutral-800 block mb-1.5">Text Color</span>
+        <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 block mb-1.5">Text Color</span>
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-lg border border-neutral-200 overflow-hidden shrink-0 relative">
+          <div className="w-8 h-8 rounded-lg border border-neutral-200 dark:border-slate-700 overflow-hidden shrink-0 relative">
             <input
               type="color"
               value={color}
@@ -226,7 +225,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({
             />
             <div className="w-full h-full" style={{ backgroundColor: color }} />
           </div>
-          <span className="text-xs font-mono font-medium uppercase text-neutral-600">
+          <span className="text-xs font-mono font-medium uppercase text-neutral-600 dark:text-neutral-300">
             {color}
           </span>
         </div>
@@ -240,7 +239,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({
               className={`w-full aspect-square rounded-md border ${
                 color.toUpperCase() === item.hex.toUpperCase()
                   ? 'border-blue-600 ring-2 ring-blue-600/30'
-                  : 'border-neutral-200'
+                  : 'border-neutral-200 dark:border-slate-700'
               }`}
               style={{ backgroundColor: item.hex }}
               title={item.name}
@@ -251,12 +250,12 @@ export const TextEditor: React.FC<TextEditorProps> = ({
 
       {/* Action buttons when editing an existing selection */}
       {isEditingSelected && (
-        <div className="pt-2 border-t border-neutral-100 flex items-center gap-2">
+        <div className="pt-2 border-t border-neutral-100 dark:border-slate-800 flex items-center gap-2">
           {onDuplicate && (
             <button
               type="button"
               onClick={onDuplicate}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-semibold rounded-lg transition-colors"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-neutral-100 dark:bg-slate-800 hover:bg-neutral-200 dark:hover:bg-slate-700 text-neutral-700 dark:text-neutral-200 text-xs font-semibold rounded-lg transition-colors"
             >
               <Copy className="w-3.5 h-3.5" />
               Duplicate
@@ -266,7 +265,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({
             <button
               type="button"
               onClick={onDelete}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg transition-colors"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-600 dark:text-red-300 text-xs font-semibold rounded-lg transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" />
               Delete

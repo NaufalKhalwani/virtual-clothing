@@ -29,14 +29,14 @@ class WebGLErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryStat
   render() {
     if (this.state.hasError) {
       return (
-        <div className="w-full h-full min-h-[400px] flex flex-col items-center justify-center p-8 text-center bg-neutral-50 rounded-2xl border border-neutral-200">
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-4">
+        <div className="w-full h-full min-h-[400px] flex flex-col items-center justify-center p-8 text-center bg-neutral-50 dark:bg-slate-900 rounded-2xl border border-neutral-200 dark:border-slate-800">
+          <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center text-red-600 dark:text-red-400 mb-4">
             <AlertTriangle className="w-6 h-6" />
           </div>
-          <h3 className="text-lg font-semibold text-neutral-900 mb-2">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">
             Unable to load 3D Viewer
           </h3>
-          <p className="text-sm text-neutral-600 max-w-md mb-4">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-md mb-4">
             {this.state.error?.message ||
               'Your browser may not support WebGL hardware acceleration, or the 3D model asset could not be loaded.'}
           </p>
@@ -61,7 +61,7 @@ class WebGLErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryStat
 
 export const Viewer3D: React.FC = () => {
   return (
-    <div className="relative w-full h-full min-h-[450px] bg-neutral-50/50 rounded-2xl overflow-hidden border border-neutral-200/60 select-none">
+    <div className="relative w-full h-full min-h-[450px] bg-neutral-100/70 dark:bg-slate-950/80 rounded-2xl overflow-hidden border border-neutral-200/60 dark:border-slate-800/80 select-none transition-colors duration-200">
       <WebGLErrorBoundary>
         <Suspense fallback={null}>
           <Canvas

@@ -29,13 +29,13 @@ export const ColorEditor: React.FC = () => {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-neutral-900">Garment Color</h3>
-          <p className="text-xs text-neutral-500">Pick preset or customize hex code</p>
+          <h3 className="text-sm font-semibold text-neutral-900 dark:text-white">Garment Color</h3>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">Pick preset or customize hex code</p>
         </div>
         <button
           type="button"
           onClick={handleReset}
-          className="text-xs text-neutral-500 hover:text-neutral-900 flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-neutral-100"
+          className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white flex items-center gap-1 transition-colors px-2 py-1 rounded hover:bg-neutral-100 dark:hover:bg-slate-800"
           title="Reset to default white"
         >
           <RotateCcw className="w-3.5 h-3.5" />
@@ -55,7 +55,7 @@ export const ColorEditor: React.FC = () => {
               className={`group relative w-full aspect-square rounded-lg border transition-all duration-150 flex items-center justify-center ${
                 isSelected
                   ? 'border-blue-600 ring-2 ring-blue-600/30 scale-105 shadow-xs'
-                  : 'border-neutral-200 hover:border-neutral-400 hover:scale-105'
+                  : 'border-neutral-200 dark:border-slate-700 hover:border-neutral-400 dark:hover:border-slate-500 hover:scale-105'
               }`}
               style={{ backgroundColor: item.hex }}
               title={`${item.name} (${item.hex})`}
@@ -75,13 +75,13 @@ export const ColorEditor: React.FC = () => {
       </div>
 
       {/* Custom Color Input and Hex Display */}
-      <div className="pt-2 border-t border-neutral-100">
-        <label className="text-xs font-medium text-neutral-700 block mb-1.5">
+      <div className="pt-2 border-t border-neutral-100 dark:border-slate-800">
+        <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300 block mb-1.5">
           Custom HEX Color
         </label>
         <div className="flex items-center gap-2">
           {/* Native Color Picker trigger */}
-          <div className="relative w-10 h-10 rounded-lg border border-neutral-200 overflow-hidden shrink-0 shadow-2xs">
+          <div className="relative w-10 h-10 rounded-lg border border-neutral-200 dark:border-slate-700 overflow-hidden shrink-0 shadow-2xs">
             <input
               type="color"
               value={baseColor}
@@ -102,7 +102,7 @@ export const ColorEditor: React.FC = () => {
               onChange={handleHexChange}
               placeholder="#FFFFFF"
               maxLength={7}
-              className="w-full px-3 py-2 text-xs font-mono font-medium uppercase border border-neutral-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
+              className="w-full px-3 py-2 text-xs font-mono font-medium uppercase bg-white dark:bg-slate-800 text-neutral-900 dark:text-white border border-neutral-200 dark:border-slate-700 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
             />
           </div>
         </div>

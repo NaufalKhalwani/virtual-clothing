@@ -18,9 +18,9 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
 
   if (objects.length === 0) {
     return (
-      <div className="p-6 text-center rounded-xl bg-neutral-50 border border-neutral-200">
-        <p className="text-xs text-neutral-500">No artwork or text elements on this surface.</p>
-        <p className="text-[11px] text-neutral-400 mt-1">
+      <div className="p-6 text-center rounded-xl bg-neutral-50 dark:bg-slate-800/60 border border-neutral-200 dark:border-slate-700/80">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400">No artwork or text elements on this surface.</p>
+        <p className="text-[11px] text-neutral-400 dark:text-neutral-500 mt-1">
           Upload an image or add text to start building layers.
         </p>
       </div>
@@ -54,7 +54,7 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between text-xs text-neutral-500 mb-1">
+      <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-1">
         <span>Layer Stack (Top to Bottom)</span>
         <span>{objects.length} elements</span>
       </div>
@@ -73,15 +73,15 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
               onClick={() => handleSelect(obj)}
               className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 cursor-pointer transition-colors ${
                 isSelected
-                  ? 'border-blue-600 bg-blue-50/70 text-blue-900 shadow-2xs'
-                  : 'border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50 text-neutral-700'
+                  ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-900/40 text-blue-900 dark:text-blue-200 shadow-2xs'
+                  : 'border-neutral-200 dark:border-slate-700/80 bg-white dark:bg-slate-800 hover:border-neutral-300 dark:hover:border-slate-600 hover:bg-neutral-50 dark:hover:bg-slate-700/50 text-neutral-700 dark:text-neutral-300'
               }`}
             >
               <div className="flex items-center gap-2 min-w-0">
                 {isText ? (
-                  <Type className="w-4 h-4 text-blue-600 shrink-0" />
+                  <Type className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
                 ) : (
-                  <ImageIcon className="w-4 h-4 text-purple-600 shrink-0" />
+                  <ImageIcon className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
                 )}
                 <span className="text-xs font-medium truncate">{label}</span>
               </div>
@@ -90,7 +90,7 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
                 <button
                   type="button"
                   onClick={() => handleBringForward(obj)}
-                  className="p-1 text-neutral-400 hover:text-neutral-800 rounded hover:bg-neutral-200/60"
+                  className="p-1 text-neutral-400 dark:text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 rounded hover:bg-neutral-200/60 dark:hover:bg-slate-700"
                   title="Bring Forward"
                 >
                   <ArrowUp className="w-3.5 h-3.5" />
@@ -98,7 +98,7 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
                 <button
                   type="button"
                   onClick={() => handleSendBackward(obj)}
-                  className="p-1 text-neutral-400 hover:text-neutral-800 rounded hover:bg-neutral-200/60"
+                  className="p-1 text-neutral-400 dark:text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 rounded hover:bg-neutral-200/60 dark:hover:bg-slate-700"
                   title="Send Backward"
                 >
                   <ArrowDown className="w-3.5 h-3.5" />
@@ -106,7 +106,7 @@ export const LayerManager: React.FC<LayerManagerProps> = ({
                 <button
                   type="button"
                   onClick={() => handleDelete(obj)}
-                  className="p-1 text-red-400 hover:text-red-600 rounded hover:bg-red-50"
+                  className="p-1 text-red-400 hover:text-red-600 dark:hover:text-red-300 rounded hover:bg-red-50 dark:hover:bg-red-950/50"
                   title="Delete Layer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />

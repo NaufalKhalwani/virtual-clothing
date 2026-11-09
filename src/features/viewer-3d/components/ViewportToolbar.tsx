@@ -27,9 +27,9 @@ export const ViewportToolbar: React.FC = () => {
   };
 
   return (
-    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex flex-wrap items-center justify-center gap-1.5 p-1.5 bg-white/95 backdrop-blur-md rounded-xl border border-neutral-200/80 shadow-md">
+    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex flex-wrap items-center justify-center gap-1.5 p-1.5 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl border border-neutral-200/80 dark:border-slate-800 shadow-md transition-colors duration-200">
       {/* Surface Quick-Toggles */}
-      <div className="flex items-center gap-1 pr-1.5 border-r border-neutral-200">
+      <div className="flex items-center gap-1 pr-1.5 border-r border-neutral-200 dark:border-slate-800">
         <button
           type="button"
           onClick={() => {
@@ -39,7 +39,7 @@ export const ViewportToolbar: React.FC = () => {
           className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
             selectedSurface === 'front' && activeCameraPreset === 'front'
               ? 'bg-blue-600 text-white shadow-xs'
-              : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
+              : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-slate-800 hover:text-neutral-900 dark:hover:text-white'
           }`}
           title="Switch to Front Surface View"
         >
@@ -54,7 +54,7 @@ export const ViewportToolbar: React.FC = () => {
           className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
             selectedSurface === 'back' && activeCameraPreset === 'back'
               ? 'bg-blue-600 text-white shadow-xs'
-              : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
+              : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-slate-800 hover:text-neutral-900 dark:hover:text-white'
           }`}
           title="Switch to Back Surface View"
         >
@@ -63,14 +63,14 @@ export const ViewportToolbar: React.FC = () => {
       </div>
 
       {/* Side Views */}
-      <div className="flex items-center gap-1 pr-1.5 border-r border-neutral-200">
+      <div className="flex items-center gap-1 pr-1.5 border-r border-neutral-200 dark:border-slate-800">
         <button
           type="button"
           onClick={() => handlePresetClick('left')}
           className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors ${
             activeCameraPreset === 'left'
-              ? 'bg-neutral-900 text-white'
-              : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
+              ? 'bg-neutral-900 dark:bg-slate-800 text-white'
+              : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-slate-800 hover:text-neutral-900 dark:hover:text-white'
           }`}
           title="Left View"
         >
@@ -81,8 +81,8 @@ export const ViewportToolbar: React.FC = () => {
           onClick={() => handlePresetClick('right')}
           className={`px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors ${
             activeCameraPreset === 'right'
-              ? 'bg-neutral-900 text-white'
-              : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
+              ? 'bg-neutral-900 dark:bg-slate-800 text-white'
+              : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-slate-800 hover:text-neutral-900 dark:hover:text-white'
           }`}
           title="Right View"
         >
@@ -93,8 +93,8 @@ export const ViewportToolbar: React.FC = () => {
           onClick={() => handlePresetClick('isometric')}
           className={`p-1.5 text-xs font-medium rounded-lg transition-colors ${
             activeCameraPreset === 'isometric'
-              ? 'bg-neutral-900 text-white'
-              : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
+              ? 'bg-neutral-900 dark:bg-slate-800 text-white'
+              : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-slate-800 hover:text-neutral-900 dark:hover:text-white'
           }`}
           title="Isometric View"
         >
@@ -109,8 +109,8 @@ export const ViewportToolbar: React.FC = () => {
           onClick={toggleAutoRotate}
           className={`p-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1 ${
             autoRotate
-              ? 'bg-blue-50 text-blue-600 border border-blue-200'
-              : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
+              ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800'
+              : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-slate-800 hover:text-neutral-900 dark:hover:text-white'
           }`}
           title="Toggle 360° Auto-Rotation"
         >
@@ -123,8 +123,8 @@ export const ViewportToolbar: React.FC = () => {
           onClick={toggleWireframe}
           className={`p-1.5 rounded-lg text-xs font-medium transition-colors ${
             wireframe
-              ? 'bg-blue-50 text-blue-600 border border-blue-200'
-              : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
+              ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800'
+              : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-slate-800 hover:text-neutral-900 dark:hover:text-white'
           }`}
           title="Toggle Wireframe Mesh"
         >
@@ -134,7 +134,7 @@ export const ViewportToolbar: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveCameraPreset('front')}
-          className="p-1.5 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
+          className="p-1.5 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-slate-800 hover:text-neutral-900 dark:hover:text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
           title="Reset Camera Position"
         >
           <RefreshCw className="w-4 h-4" />

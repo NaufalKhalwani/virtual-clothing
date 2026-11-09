@@ -49,7 +49,6 @@ export const ArtworkUploader: React.FC<ArtworkUploaderProps> = ({
   // Global Clipboard Paste Listener
   useEffect(() => {
     const handlePaste = (event: ClipboardEvent) => {
-      // Don't intercept paste when typing inside input or textarea
       const target = event.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
         return;
@@ -99,15 +98,15 @@ export const ArtworkUploader: React.FC<ArtworkUploaderProps> = ({
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       processFile(e.target.files[0]);
-      e.target.value = ''; // Reset input to allow uploading the same file again
+      e.target.value = '';
     }
   };
 
   return (
     <div className={`space-y-3 ${className}`}>
       {errorMessage && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-start gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
+        <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded-xl text-xs text-red-700 dark:text-red-300 flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
           <span>{errorMessage}</span>
         </div>
       )}
@@ -119,8 +118,8 @@ export const ArtworkUploader: React.FC<ArtworkUploaderProps> = ({
         onClick={() => fileInputRef.current?.click()}
         className={`group relative flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${
           isDragging
-            ? 'border-blue-600 bg-blue-50/70 scale-[1.01]'
-            : 'border-neutral-200 hover:border-blue-500 hover:bg-neutral-50/80'
+            ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-950/30 scale-[1.01]'
+            : 'border-neutral-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-neutral-50/80 dark:hover:bg-slate-800/40'
         }`}
       >
         <input
@@ -131,20 +130,20 @@ export const ArtworkUploader: React.FC<ArtworkUploaderProps> = ({
           className="hidden"
         />
 
-        <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-2xs">
+        <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-2xs">
           <UploadCloud className="w-6 h-6" />
         </div>
 
-        <p className="text-xs font-semibold text-neutral-800 text-center mb-1">
+        <p className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 text-center mb-1">
           Click to upload or drag & drop
         </p>
-        <p className="text-[11px] text-neutral-500 text-center mb-2">
+        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 text-center mb-2">
           PNG, JPG, or WebP up to 10 MB
         </p>
 
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-100 text-[10px] text-neutral-600 font-mono">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-100 dark:bg-slate-800 text-[10px] text-neutral-600 dark:text-neutral-300 font-mono">
           <span>Tip: Press</span>
-          <kbd className="px-1 py-0.5 bg-white border border-neutral-300 rounded font-semibold text-neutral-800">
+          <kbd className="px-1 py-0.5 bg-white dark:bg-slate-700 border border-neutral-300 dark:border-slate-600 rounded font-semibold text-neutral-800 dark:text-white">
             Ctrl+V
           </kbd>
           <span>to paste from clipboard</span>

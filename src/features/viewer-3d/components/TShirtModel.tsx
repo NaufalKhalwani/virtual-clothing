@@ -141,6 +141,7 @@ export const TShirtModel: React.FC = () => {
               rotation={[0, 0, 0]}
               scale={[0.26, 0.32, 0.2]}
               map={frontTexture}
+              depthTest={true}
               polygonOffsetFactor={-1}
             />
           )}
@@ -152,6 +153,7 @@ export const TShirtModel: React.FC = () => {
               rotation={[0, Math.PI, 0]}
               scale={[0.26, 0.32, 0.2]}
               map={backTexture}
+              depthTest={true}
               polygonOffsetFactor={-1}
             />
           )}

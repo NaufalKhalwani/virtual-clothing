@@ -90,15 +90,15 @@ export const EditPanel: React.FC = () => {
     selectedFabricObject?.type === 'fabricimage' || selectedFabricObject?.type === 'image';
 
   return (
-    <aside className="w-full md:w-80 lg:w-96 bg-white border-l border-neutral-200/80 flex flex-col h-full overflow-y-auto shrink-0 select-none">
+    <aside className="w-full md:w-80 lg:w-96 bg-white dark:bg-slate-900 border-l border-neutral-200/80 dark:border-slate-800 flex flex-col h-full overflow-y-auto shrink-0 select-none transition-colors duration-200">
       {/* Surface Selector & History Bar */}
-      <div className="p-4 border-b border-neutral-100 bg-neutral-50/70 space-y-3">
+      <div className="p-4 border-b border-neutral-100 dark:border-slate-800/80 bg-neutral-50/70 dark:bg-slate-900/60 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-neutral-600">
+            <span className="text-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">
               Editing Surface
             </span>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 capitalize">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 capitalize">
               {selectedSurface}
             </span>
           </div>
@@ -111,8 +111,8 @@ export const EditPanel: React.FC = () => {
               disabled={history.past.length === 0}
               className={`p-1.5 rounded-lg text-xs transition-colors ${
                 history.past.length > 0
-                  ? 'text-neutral-700 hover:bg-neutral-200'
-                  : 'text-neutral-300 cursor-not-allowed'
+                  ? 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-slate-800'
+                  : 'text-neutral-300 dark:text-slate-600 cursor-not-allowed'
               }`}
               title="Undo (Ctrl+Z)"
             >
@@ -124,8 +124,8 @@ export const EditPanel: React.FC = () => {
               disabled={history.future.length === 0}
               className={`p-1.5 rounded-lg text-xs transition-colors ${
                 history.future.length > 0
-                  ? 'text-neutral-700 hover:bg-neutral-200'
-                  : 'text-neutral-300 cursor-not-allowed'
+                  ? 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-slate-800'
+                  : 'text-neutral-300 dark:text-slate-600 cursor-not-allowed'
               }`}
               title="Redo (Ctrl+Shift+Z)"
             >
@@ -134,7 +134,7 @@ export const EditPanel: React.FC = () => {
             <button
               type="button"
               onClick={() => resetSurface(selectedSurface)}
-              className="p-1.5 text-neutral-500 hover:text-red-600 hover:bg-neutral-200 rounded-lg text-xs transition-colors"
+              className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-neutral-200 dark:hover:bg-slate-800 rounded-lg text-xs transition-colors"
               title="Clear current surface design"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -143,14 +143,14 @@ export const EditPanel: React.FC = () => {
         </div>
 
         {/* Surface Switch Tabs */}
-        <div className="grid grid-cols-2 gap-2 bg-neutral-200/60 p-1 rounded-xl">
+        <div className="grid grid-cols-2 gap-2 bg-neutral-200/60 dark:bg-slate-800 p-1 rounded-xl">
           <button
             type="button"
             onClick={() => handleSurfaceChange('front')}
             className={`py-2 text-xs font-semibold rounded-lg transition-all ${
               selectedSurface === 'front'
-                ? 'bg-white text-neutral-900 shadow-xs'
-                : 'text-neutral-600 hover:text-neutral-900'
+                ? 'bg-white dark:bg-slate-700 text-neutral-900 dark:text-white shadow-xs'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
             }`}
           >
             Front Surface
@@ -160,8 +160,8 @@ export const EditPanel: React.FC = () => {
             onClick={() => handleSurfaceChange('back')}
             className={`py-2 text-xs font-semibold rounded-lg transition-all ${
               selectedSurface === 'back'
-                ? 'bg-white text-neutral-900 shadow-xs'
-                : 'text-neutral-600 hover:text-neutral-900'
+                ? 'bg-white dark:bg-slate-700 text-neutral-900 dark:text-white shadow-xs'
+                : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
             }`}
           >
             Back Surface
@@ -170,30 +170,30 @@ export const EditPanel: React.FC = () => {
       </div>
 
       {/* 2D Interactive Composition Canvas */}
-      <div className="p-4 border-b border-neutral-100 bg-white">
+      <div className="p-4 border-b border-neutral-100 dark:border-slate-800 bg-white dark:bg-slate-900">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold text-neutral-700">
+          <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
             2D Artwork Composition
           </span>
-          <span className="text-[10px] text-neutral-400">
+          <span className="text-[10px] text-neutral-400 dark:text-neutral-500">
             Drag, scale, or rotate handles
           </span>
         </div>
         <ArtworkCanvas
           onCanvasReady={(inst) => setCanvasInstance(inst)}
-          onTextureUpdate={() => {
-            // Handled inside hook
-          }}
+          onTextureUpdate={() => {}}
         />
       </div>
 
-      {/* Quick Tool Navigation (when on mobile/small screens) */}
-      <div className="flex md:hidden border-b border-neutral-100 bg-neutral-50/50 p-1">
+      {/* Quick Tool Navigation (Mobile / Small Screens) */}
+      <div className="flex md:hidden border-b border-neutral-100 dark:border-slate-800 bg-neutral-50/50 dark:bg-slate-900 p-1">
         <button
           type="button"
           onClick={() => setActiveTab('color')}
           className={`flex-1 py-1.5 text-xs font-medium rounded-lg flex items-center justify-center gap-1 ${
-            activeTab === 'color' ? 'bg-white shadow-2xs text-blue-600' : 'text-neutral-600'
+            activeTab === 'color'
+              ? 'bg-white dark:bg-slate-800 shadow-2xs text-blue-600 dark:text-blue-400'
+              : 'text-neutral-600 dark:text-neutral-400'
           }`}
         >
           <Palette className="w-3.5 h-3.5" />
@@ -203,7 +203,9 @@ export const EditPanel: React.FC = () => {
           type="button"
           onClick={() => setActiveTab('upload')}
           className={`flex-1 py-1.5 text-xs font-medium rounded-lg flex items-center justify-center gap-1 ${
-            activeTab === 'upload' ? 'bg-white shadow-2xs text-blue-600' : 'text-neutral-600'
+            activeTab === 'upload'
+              ? 'bg-white dark:bg-slate-800 shadow-2xs text-blue-600 dark:text-blue-400'
+              : 'text-neutral-600 dark:text-neutral-400'
           }`}
         >
           <Upload className="w-3.5 h-3.5" />
@@ -213,7 +215,9 @@ export const EditPanel: React.FC = () => {
           type="button"
           onClick={() => setActiveTab('text')}
           className={`flex-1 py-1.5 text-xs font-medium rounded-lg flex items-center justify-center gap-1 ${
-            activeTab === 'text' ? 'bg-white shadow-2xs text-blue-600' : 'text-neutral-600'
+            activeTab === 'text'
+              ? 'bg-white dark:bg-slate-800 shadow-2xs text-blue-600 dark:text-blue-400'
+              : 'text-neutral-600 dark:text-neutral-400'
           }`}
         >
           <Type className="w-3.5 h-3.5" />
@@ -223,7 +227,9 @@ export const EditPanel: React.FC = () => {
           type="button"
           onClick={() => setActiveTab('layers')}
           className={`flex-1 py-1.5 text-xs font-medium rounded-lg flex items-center justify-center gap-1 ${
-            activeTab === 'layers' ? 'bg-white shadow-2xs text-blue-600' : 'text-neutral-600'
+            activeTab === 'layers'
+              ? 'bg-white dark:bg-slate-800 shadow-2xs text-blue-600 dark:text-blue-400'
+              : 'text-neutral-600 dark:text-neutral-400'
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
@@ -248,7 +254,7 @@ export const EditPanel: React.FC = () => {
             ) : null}
 
             <div>
-              <span className="text-xs font-semibold text-neutral-800 block mb-2">
+              <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 block mb-2">
                 Upload New Artwork
               </span>
               <ArtworkUploader onImageSelected={(dataUrl) => addImage(dataUrl)} />
@@ -258,7 +264,7 @@ export const EditPanel: React.FC = () => {
 
         {activeTab === 'text' && (
           <div>
-            <span className="text-xs font-semibold text-neutral-800 block mb-2">
+            <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 block mb-2">
               {isSelectedText ? 'Edit Selected Text' : 'Add Custom Typography'}
             </span>
             <TextEditor
@@ -297,12 +303,12 @@ export const EditPanel: React.FC = () => {
       </div>
 
       {/* Footer Status Bar */}
-      <div className="p-3 border-t border-neutral-100 bg-neutral-50/60 text-[11px] text-neutral-500 flex items-center justify-between">
+      <div className="p-3 border-t border-neutral-100 dark:border-slate-800 bg-neutral-50/60 dark:bg-slate-900/60 text-[11px] text-neutral-500 dark:text-neutral-400 flex items-center justify-between">
         <span className="flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+          <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
           <span>Real-time Decal Projection</span>
         </span>
-        <span className="font-mono text-neutral-400">Phase 3 Live</span>
+        <span className="font-mono text-neutral-400 dark:text-neutral-500">Phase 3.1 & 3.2</span>
       </div>
     </aside>
   );

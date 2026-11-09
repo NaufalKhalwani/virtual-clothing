@@ -54,10 +54,14 @@ export interface SurfaceDesign {
 
 export interface DesignerState {
   garmentType: GarmentType;
-  selectedSurface: 'front' | 'back' | string;
+  selectedSurface: string;
   selectedElementId: string | null;
   baseColor: string;
   isDirty: boolean;
+
+  // Separate persistent surfaces for both garments
+  tshirtSurfaces: Record<string, SurfaceDesign>;
+  jerseySurfaces: Record<string, SurfaceDesign>;
   surfaces: Record<string, SurfaceDesign>;
 
   // History
@@ -68,7 +72,7 @@ export interface DesignerState {
 
   // Actions
   setGarmentType: (type: GarmentType) => void;
-  selectSurface: (surface: 'front' | 'back' | string) => void;
+  selectSurface: (surface: string) => void;
   setBaseColor: (color: string) => void;
   setSurfaceColor: (surface: string, color: string) => void;
   setSurfaceTexture: (surface: string, dataUrl: string | null, canvasJson?: string | null) => void;
