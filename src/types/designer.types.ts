@@ -59,6 +59,12 @@ export interface DesignerState {
   baseColor: string;
   isDirty: boolean;
 
+  // Project persistence state
+  currentProjectId: string | null;
+  currentProjectName: string;
+  isSaving: boolean;
+  lastSavedAt: string | null;
+
   // Separate persistent surfaces for both garments
   tshirtSurfaces: Record<string, SurfaceDesign>;
   jerseySurfaces: Record<string, SurfaceDesign>;
@@ -84,6 +90,18 @@ export interface DesignerState {
   selectElement: (id: string | null) => void;
   resetSurface: (surface: string) => void;
   resetAll: () => void;
+
+  // Project persistence actions
+  setCurrentProject: (id: string | null, name: string) => void;
+  loadProjectData: (
+    garmentType: GarmentType,
+    baseColor: string,
+    surfaces: Record<string, SurfaceDesign>,
+    projectId?: string,
+    projectName?: string
+  ) => void;
+  setIsSaving: (isSaving: boolean) => void;
+  markSaved: (timestamp?: string) => void;
 
   // History Actions
   pushHistory: () => void;

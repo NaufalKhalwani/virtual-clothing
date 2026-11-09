@@ -12,6 +12,7 @@
   "dependencies": {
     "@react-three/drei": "^10.0.0",
     "@react-three/fiber": "^9.0.0",
+    "@supabase/supabase-js": "^2.119.0",
     "clsx": "^2.1.1",
     "fabric": "^7.4.0",
     "lucide-react": "^1.16.0",

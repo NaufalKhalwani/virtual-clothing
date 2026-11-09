@@ -25,6 +25,10 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   selectedElementId: null,
   baseColor: DEFAULT_TSHIRT_COLOR,
   isDirty: false,
+  currentProjectId: null,
+  currentProjectName: 'Untitled Design',
+  isSaving: false,
+  lastSavedAt: null,
   tshirtSurfaces: initialTShirtSurfaces,
   jerseySurfaces: initialJerseySurfaces,
   surfaces: initialTShirtSurfaces,
@@ -262,6 +266,37 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
         isDirty: false,
       });
     }
+  },
+
+  setCurrentProject: (id: string | null, name: string) => {
+    set({ currentProjectId: id, currentProjectName: name });
+  },
+
+  loadProjectData: (garmentType, baseColor, loadedSurfaces, projectId, projectName) => {
+    set({
+      garmentType,
+      baseColor,
+      surfaces: loadedSurfaces,
+      ...(garmentType === 'jersey'
+        ? { jerseySurfaces: loadedSurfaces }
+        : { tshirtSurfaces: loadedSurfaces }),
+      currentProjectId: projectId || null,
+      currentProjectName: projectName || 'Untitled Design',
+      selectedSurface: 'front',
+      selectedElementId: null,
+      isDirty: false,
+      history: { past: [], future: [] },
+    });
+  },
+
+  setIsSaving: (isSaving: boolean) => set({ isSaving }),
+
+  markSaved: (timestamp) => {
+    set({
+      isDirty: false,
+      isSaving: false,
+      lastSavedAt: timestamp || new Date().toISOString(),
+    });
   },
 
   pushHistory: () => {

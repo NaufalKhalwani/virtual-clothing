@@ -1,0 +1,245 @@
+import React, { useState } from 'react';
+import { useDesignerStore } from '@/stores/designer.store';
+import { useAuthStore } from '@/stores/auth.store';
+import { projectService } from '@/services/supabase/project.service';
+import { storageService } from '@/services/supabase/storage.service';
+import type { ProjectDesignData } from '@/types/project.types';
+import { X, Save, AlertCircle, CheckCircle2 } from 'lucide-react';
+
+interface Props {
+  isOpen: boolean;
+  onClose: () => void;
+  onSaved?: (projectId: string, name: string) => void;
+}
+
+export const SaveProjectModal: React.FC<Props> = ({ isOpen, onClose, onSaved }) => {
+  const user = useAuthStore((state) => state.user);
+  const openAuthModal = useAuthStore((state) => state.openAuthModal);
+
+  const garmentType = useDesignerStore((state) => state.garmentType);
+  const baseColor = useDesignerStore((state) => state.baseColor);
+  const selectedSurface = useDesignerStore((state) => state.selectedSurface);
+  const surfaces = useDesignerStore((state) => state.surfaces);
+  const currentProjectId = useDesignerStore((state) => state.currentProjectId);
+  const currentProjectName = useDesignerStore((state) => state.currentProjectName);
+  const setCurrentProject = useDesignerStore((state) => state.setCurrentProject);
+  const markSaved = useDesignerStore((state) => state.markSaved);
+  const setIsSaving = useDesignerStore((state) => state.setIsSaving);
+  const isSaving = useDesignerStore((state) => state.isSaving);
+
+  const [projectName, setProjectName] = useState(
+    currentProjectName === 'Untitled Design'
+      ? `${garmentType === 'jersey' ? 'Jersey' : 'T-Shirt'} Design ${new Date().toLocaleDateString()}`
+      : currentProjectName
+  );
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<boolean>(false);
+
+  if (!isOpen) return null;
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      onClose();
+      openAuthModal('signin');
+      return;
+    }
+
+    if (!projectName.trim()) {
+      setError('Please provide a project name');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setError(null);
+
+      // Serialize clean design data
+      const serializedSurfaces: ProjectDesignData['surfaces'] = {};
+      for (const [key, val] of Object.entries(surfaces)) {
+        serializedSurfaces[key] = {
+          color: val.color,
+          elements: val.elements,
+          canvasJson: val.canvasJson || null,
+          textureDataUrl: val.textureDataUrl || null,
+        };
+      }
+
+      const designData: ProjectDesignData = {
+        version: 1,
+        garmentType,
+        baseColor,
+        selectedSurface,
+        surfaces: serializedSurfaces,
+      };
+
+      // Generate front thumbnail from active or front surface
+      const thumbnailSource = surfaces.front?.textureDataUrl || surfaces[selectedSurface]?.textureDataUrl || null;
+      let thumbnailUrl: string | null = null;
+
+      if (thumbnailSource) {
+        const thumbResult = await storageService.uploadThumbnail(
+          user.id,
+          currentProjectId || `thumb_${Date.now()}`,
+          thumbnailSource
+        );
+        thumbnailUrl = thumbResult.url;
+      }
+
+      if (currentProjectId) {
+        // Update existing project
+        const { data, error: updateErr } = await projectService.updateProject(currentProjectId, {
+          name: projectName.trim(),
+          thumbnail_url: thumbnailUrl,
+          design_data: designData,
+        });
+
+        if (updateErr || !data) {
+          throw new Error(updateErr || 'Failed to update project');
+        }
+
+        setCurrentProject(data.id, data.name);
+        markSaved(data.updated_at);
+        setSuccess(true);
+        if (onSaved) onSaved(data.id, data.name);
+      } else {
+        // Create new project
+        const { data, error: createErr } = await projectService.createProject(user.id, {
+          name: projectName.trim(),
+          garment_type: garmentType,
+          thumbnail_url: thumbnailUrl,
+          design_data: designData,
+        });
+
+        if (createErr || !data) {
+          throw new Error(createErr || 'Failed to create project');
+        }
+
+        setCurrentProject(data.id, data.name);
+        markSaved(data.updated_at);
+        setSuccess(true);
+        if (onSaved) onSaved(data.id, data.name);
+      }
+
+      setTimeout(() => {
+        setSuccess(false);
+        onClose();
+      }, 1000);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to save project');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div
+        className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-neutral-200 dark:border-slate-800 shadow-2xl p-6 sm:p-7 text-neutral-900 dark:text-white transition-all select-none"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-5 right-5 p-1.5 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 rounded-full hover:bg-neutral-100 dark:hover:bg-slate-800 transition-colors"
+          aria-label="Close modal"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+            <Save className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold">Save Clothing Project</h3>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              Persist all layers, fabric colors, typography, and 3D textures
+            </p>
+          </div>
+        </div>
+
+        {error && (
+          <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+            <span>Project successfully saved!</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSave} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
+              Project Name
+            </label>
+            <input
+              type="text"
+              required
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              placeholder="e.g. Summer Tour 2026 Jersey"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 dark:border-slate-700 bg-neutral-50 dark:bg-slate-800 text-xs text-neutral-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-600 transition-all font-medium"
+            />
+          </div>
+
+          <div className="p-3 bg-neutral-50 dark:bg-slate-800/60 rounded-xl border border-neutral-200/70 dark:border-slate-700/70 text-xs text-neutral-600 dark:text-neutral-400 space-y-1.5">
+            <div className="flex justify-between">
+              <span>Garment Type:</span>
+              <span className="font-semibold capitalize text-neutral-900 dark:text-white">{garmentType}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Fabric Color:</span>
+              <div className="flex items-center gap-1.5 font-mono text-[11px]">
+                <span
+                  className="w-3.5 h-3.5 rounded-full border border-neutral-300 dark:border-slate-600"
+                  style={{ backgroundColor: baseColor }}
+                />
+                <span>{baseColor}</span>
+              </div>
+            </div>
+            <div className="flex justify-between">
+              <span>Configured Surfaces:</span>
+              <span className="font-mono text-neutral-900 dark:text-white">
+                {Object.keys(surfaces).length} surfaces
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isSaving}
+              className="px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-slate-700 text-neutral-700 dark:text-neutral-300 text-xs font-semibold hover:bg-neutral-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors disabled:opacity-50"
+            >
+              {isSaving ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Save Project</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};

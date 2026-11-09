@@ -28,6 +28,9 @@ export const ArtworkCanvas: React.FC<ArtworkCanvasProps> = ({
   const selectElement = useDesignerStore((state) => state.selectElement);
   const pushHistory = useDesignerStore((state) => state.pushHistory);
 
+  const surfaceJson = surfaces[selectedSurface]?.canvasJson || null;
+  const lastLoadedJsonRef = useRef<string | null>(null);
+
   // Synchronize canvas to 3D texture and store
   const syncTexture = useCallback(() => {
     if (!fabricRef.current || isSwitchingSurface.current) return;
@@ -41,6 +44,7 @@ export const ArtworkCanvas: React.FC<ArtworkCanvasProps> = ({
     }
 
     const json = serializeCanvas(canvas);
+    lastLoadedJsonRef.current = json;
     setSurfaceTexture(selectedSurface, dataUrl, json);
 
     if (dataUrl && onTextureUpdate) {
@@ -95,6 +99,7 @@ export const ArtworkCanvas: React.FC<ArtworkCanvasProps> = ({
     const initialSurface = surfaces[selectedSurface];
     if (initialSurface?.canvasJson) {
       loadCanvasFromJson(fabricCanvas, initialSurface.canvasJson).then(() => {
+        lastLoadedJsonRef.current = initialSurface.canvasJson ?? null;
         syncTexture();
       });
     }
@@ -106,27 +111,33 @@ export const ArtworkCanvas: React.FC<ArtworkCanvasProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Surface Switch Handler
+  // Surface Switch or External Project Load Handler
   useEffect(() => {
     const canvas = fabricRef.current;
     if (!canvas) return;
+
+    // Skip if canvas already matches this JSON
+    if (surfaceJson === lastLoadedJsonRef.current && lastLoadedJsonRef.current !== null) {
+      return;
+    }
 
     isSwitchingSurface.current = true;
     canvas.clear();
     selectElement(null);
 
-    const surfaceData = surfaces[selectedSurface];
-    if (surfaceData?.canvasJson) {
-      loadCanvasFromJson(canvas, surfaceData.canvasJson).then(() => {
+    if (surfaceJson) {
+      loadCanvasFromJson(canvas, surfaceJson).then(() => {
+        lastLoadedJsonRef.current = surfaceJson;
         isSwitchingSurface.current = false;
         syncTexture();
       });
     } else {
+      lastLoadedJsonRef.current = null;
       isSwitchingSurface.current = false;
       syncTexture();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedSurface]);
+  }, [selectedSurface, surfaceJson]);
 
   return (
     <div className="relative w-full max-w-[320px] aspect-square mx-auto rounded-2xl bg-neutral-100/80 dark:bg-slate-800/70 p-3 border border-neutral-200/80 dark:border-slate-700/80 shadow-inner flex items-center justify-center transition-colors duration-200">
