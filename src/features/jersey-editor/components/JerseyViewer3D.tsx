@@ -4,6 +4,7 @@ import { Lighting } from '@/features/viewer-3d/components/Lighting';
 import { CameraRig } from '@/features/viewer-3d/components/CameraRig';
 import { ViewportToolbar } from '@/features/viewer-3d/components/ViewportToolbar';
 import { LoadingOverlay } from '@/features/viewer-3d/components/LoadingOverlay';
+import { JerseyModel } from '@/features/jersey-editor/components/JerseyModel';
 import { Box, CheckCircle2 } from 'lucide-react';
 import { useDesignerStore } from '@/stores/designer.store';
 
@@ -40,6 +41,7 @@ export const JerseyViewer3D: React.FC = () => {
           >
             <Lighting />
             <CameraRig />
+            <JerseyModel />
           </Canvas>
           <LoadingOverlay />
           <ViewportToolbar />
