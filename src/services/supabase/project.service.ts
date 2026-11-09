@@ -16,6 +16,94 @@ function saveLocalProjects(projects: Project[]): void {
   localStorage.setItem(LOCAL_PROJECTS_KEY, JSON.stringify(projects));
 }
 
+function isSchemaCacheError(errorMsg?: string | null): boolean {
+  if (!errorMsg) return false;
+  const lower = errorMsg.toLowerCase();
+  return (
+    lower.includes('schema cache') ||
+    lower.includes('relation "public.projects" does not exist') ||
+    lower.includes('relation "projects" does not exist') ||
+    lower.includes('could not find the table') ||
+    lower.includes('pgrst205')
+  );
+}
+
+function filterAndSortLocalProjects(
+  userId: string,
+  options?: {
+    search?: string;
+    garmentType?: 'all' | 'tshirt' | 'jersey';
+    sortBy?: 'latest' | 'oldest' | 'name';
+  }
+): Project[] {
+  let list = getLocalProjects().filter((p) => p.user_id === userId);
+
+  if (options?.search) {
+    const query = options.search.toLowerCase();
+    list = list.filter((p) => p.name.toLowerCase().includes(query));
+  }
+
+  if (options?.garmentType && options.garmentType !== 'all') {
+    list = list.filter((p) => p.garment_type === options.garmentType);
+  }
+
+  if (options?.sortBy === 'oldest') {
+    list.sort((a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime());
+  } else if (options?.sortBy === 'name') {
+    list.sort((a, b) => a.name.localeCompare(b.name));
+  } else {
+    list.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+  }
+
+  return list;
+}
+
+function saveLocalProject(userId: string, input: CreateProjectInput): Project {
+  const now = new Date().toISOString();
+  const newProject: Project = {
+    id: `proj_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    user_id: userId,
+    name: input.name || 'Untitled Design',
+    garment_type: input.garment_type,
+    thumbnail_url: input.thumbnail_url || null,
+    design_data: input.design_data,
+    created_at: now,
+    updated_at: now,
+  };
+
+  const projects = getLocalProjects();
+  projects.unshift(newProject);
+  saveLocalProjects(projects);
+  return newProject;
+}
+
+function updateLocalProject(
+  projectId: string,
+  input: UpdateProjectInput
+): { data: Project | null; error: string | null } {
+  const projects = getLocalProjects();
+  const index = projects.findIndex((p) => p.id === projectId);
+  if (index === -1) {
+    return { data: null, error: 'Project not found' };
+  }
+
+  const updatedProject: Project = {
+    ...projects[index],
+    ...input,
+    updated_at: new Date().toISOString(),
+  };
+
+  projects[index] = updatedProject;
+  saveLocalProjects(projects);
+  return { data: updatedProject, error: null };
+}
+
+function deleteLocalProject(projectId: string): void {
+  const projects = getLocalProjects();
+  const filtered = projects.filter((p) => p.id !== projectId);
+  saveLocalProjects(filtered);
+}
+
 export const projectService = {
   /**
    * List all projects for the current user with search, filter, and sorting
@@ -27,28 +115,9 @@ export const projectService = {
       garmentType?: 'all' | 'tshirt' | 'jersey';
       sortBy?: 'latest' | 'oldest' | 'name';
     }
-  ): Promise<{ data: Project[]; error: string | null }> {
+  ): Promise<{ data: Project[]; error: string | null; isLocalFallback?: boolean }> {
     if (!isSupabaseConfigured) {
-      let list = getLocalProjects().filter((p) => p.user_id === userId);
-
-      if (options?.search) {
-        const query = options.search.toLowerCase();
-        list = list.filter((p) => p.name.toLowerCase().includes(query));
-      }
-
-      if (options?.garmentType && options.garmentType !== 'all') {
-        list = list.filter((p) => p.garment_type === options.garmentType);
-      }
-
-      if (options?.sortBy === 'oldest') {
-        list.sort((a, b) => new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime());
-      } else if (options?.sortBy === 'name') {
-        list.sort((a, b) => a.name.localeCompare(b.name));
-      } else {
-        list.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
-      }
-
-      return { data: list, error: null };
+      return { data: filterAndSortLocalProjects(userId, options), error: null, isLocalFallback: true };
     }
 
     try {
@@ -75,12 +144,29 @@ export const projectService = {
 
       const { data, error } = await query;
       if (error) {
+        if (isSchemaCacheError(error.message)) {
+          console.warn('[projectService] Remote table public.projects missing. Using local storage fallback.');
+          return { data: filterAndSortLocalProjects(userId, options), error: null, isLocalFallback: true };
+        }
         return { data: [], error: error.message };
       }
 
-      return { data: (data as Project[]) || [], error: null };
+      // Merge local sandbox projects that are not yet synced to remote
+      const local = filterAndSortLocalProjects(userId, options);
+      const combined = [...((data as Project[]) || [])];
+      for (const lp of local) {
+        if (!combined.some((p) => p.id === lp.id)) {
+          combined.push(lp);
+        }
+      }
+
+      return { data: combined, error: null };
     } catch (err: unknown) {
-      return { data: [], error: err instanceof Error ? err.message : 'Failed to fetch projects' };
+      const msg = err instanceof Error ? err.message : 'Failed to fetch projects';
+      if (isSchemaCacheError(msg)) {
+        return { data: filterAndSortLocalProjects(userId, options), error: null, isLocalFallback: true };
+      }
+      return { data: [], error: msg };
     }
   },
 
@@ -89,8 +175,7 @@ export const projectService = {
    */
   async getProject(projectId: string): Promise<{ data: Project | null; error: string | null }> {
     if (!isSupabaseConfigured) {
-      const projects = getLocalProjects();
-      const found = projects.find((p) => p.id === projectId) || null;
+      const found = getLocalProjects().find((p) => p.id === projectId) || null;
       return { data: found, error: found ? null : 'Project not found' };
     }
 
@@ -102,37 +187,39 @@ export const projectService = {
         .single();
 
       if (error) {
+        if (isSchemaCacheError(error.message)) {
+          const found = getLocalProjects().find((p) => p.id === projectId) || null;
+          return { data: found, error: found ? null : 'Project not found' };
+        }
+        // Check local storage before giving up
+        const found = getLocalProjects().find((p) => p.id === projectId);
+        if (found) {
+          return { data: found, error: null };
+        }
         return { data: null, error: error.message };
       }
 
       return { data: data as Project, error: null };
     } catch (err: unknown) {
-      return { data: null, error: err instanceof Error ? err.message : 'Failed to load project' };
+      const msg = err instanceof Error ? err.message : 'Failed to load project';
+      if (isSchemaCacheError(msg)) {
+        const found = getLocalProjects().find((p) => p.id === projectId) || null;
+        return { data: found, error: found ? null : 'Project not found' };
+      }
+      return { data: null, error: msg };
     }
   },
 
   /**
    * Create a new project
    */
-  async createProject(userId: string, input: CreateProjectInput): Promise<{ data: Project | null; error: string | null }> {
+  async createProject(
+    userId: string,
+    input: CreateProjectInput
+  ): Promise<{ data: Project | null; error: string | null; isLocalFallback?: boolean }> {
     if (!isSupabaseConfigured) {
-      const now = new Date().toISOString();
-      const newProject: Project = {
-        id: `proj_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-        user_id: userId,
-        name: input.name || 'Untitled Design',
-        garment_type: input.garment_type,
-        thumbnail_url: input.thumbnail_url || null,
-        design_data: input.design_data,
-        created_at: now,
-        updated_at: now,
-      };
-
-      const projects = getLocalProjects();
-      projects.unshift(newProject);
-      saveLocalProjects(projects);
-
-      return { data: newProject, error: null };
+      const newProject = saveLocalProject(userId, input);
+      return { data: newProject, error: null, isLocalFallback: true };
     }
 
     try {
@@ -149,12 +236,22 @@ export const projectService = {
         .single();
 
       if (error) {
+        if (isSchemaCacheError(error.message)) {
+          console.warn('[projectService] Remote table public.projects missing. Saving to local storage.');
+          const newProject = saveLocalProject(userId, input);
+          return { data: newProject, error: null, isLocalFallback: true };
+        }
         return { data: null, error: error.message };
       }
 
       return { data: data as Project, error: null };
     } catch (err: unknown) {
-      return { data: null, error: err instanceof Error ? err.message : 'Failed to create project' };
+      const msg = err instanceof Error ? err.message : 'Failed to create project';
+      if (isSchemaCacheError(msg)) {
+        const newProject = saveLocalProject(userId, input);
+        return { data: newProject, error: null, isLocalFallback: true };
+      }
+      return { data: null, error: msg };
     }
   },
 
@@ -164,23 +261,9 @@ export const projectService = {
   async updateProject(
     projectId: string,
     input: UpdateProjectInput
-  ): Promise<{ data: Project | null; error: string | null }> {
+  ): Promise<{ data: Project | null; error: string | null; isLocalFallback?: boolean }> {
     if (!isSupabaseConfigured) {
-      const projects = getLocalProjects();
-      const index = projects.findIndex((p) => p.id === projectId);
-      if (index === -1) {
-        return { data: null, error: 'Project not found' };
-      }
-
-      const updatedProject: Project = {
-        ...projects[index],
-        ...input,
-        updated_at: new Date().toISOString(),
-      };
-
-      projects[index] = updatedProject;
-      saveLocalProjects(projects);
-      return { data: updatedProject, error: null };
+      return updateLocalProject(projectId, input);
     }
 
     try {
@@ -197,12 +280,26 @@ export const projectService = {
         .single();
 
       if (error) {
+        if (isSchemaCacheError(error.message)) {
+          console.warn('[projectService] Remote table public.projects missing. Updating locally.');
+          const localRes = updateLocalProject(projectId, input);
+          return { ...localRes, isLocalFallback: true };
+        }
+        // Also update local if it was a local project
+        updateLocalProject(projectId, input);
         return { data: null, error: error.message };
       }
 
+      // Keep local copy in sync if exists
+      updateLocalProject(projectId, input);
       return { data: data as Project, error: null };
     } catch (err: unknown) {
-      return { data: null, error: err instanceof Error ? err.message : 'Failed to update project' };
+      const msg = err instanceof Error ? err.message : 'Failed to update project';
+      if (isSchemaCacheError(msg)) {
+        const localRes = updateLocalProject(projectId, input);
+        return { ...localRes, isLocalFallback: true };
+      }
+      return { data: null, error: msg };
     }
   },
 
@@ -228,10 +325,9 @@ export const projectService = {
    * Delete a project
    */
   async deleteProject(projectId: string): Promise<{ success: boolean; error: string | null }> {
+    deleteLocalProject(projectId);
+
     if (!isSupabaseConfigured) {
-      const projects = getLocalProjects();
-      const filtered = projects.filter((p) => p.id !== projectId);
-      saveLocalProjects(filtered);
       return { success: true, error: null };
     }
 
@@ -242,12 +338,19 @@ export const projectService = {
         .eq('id', projectId);
 
       if (error) {
+        if (isSchemaCacheError(error.message)) {
+          return { success: true, error: null };
+        }
         return { success: false, error: error.message };
       }
 
       return { success: true, error: null };
     } catch (err: unknown) {
-      return { success: false, error: err instanceof Error ? err.message : 'Failed to delete project' };
+      const msg = err instanceof Error ? err.message : 'Failed to delete project';
+      if (isSchemaCacheError(msg)) {
+        return { success: true, error: null };
+      }
+      return { success: false, error: msg };
     }
   },
 };

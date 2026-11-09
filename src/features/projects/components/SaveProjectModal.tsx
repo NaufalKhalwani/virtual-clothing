@@ -34,6 +34,7 @@ export const SaveProjectModal: React.FC<Props> = ({ isOpen, onClose, onSaved }) 
   );
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
+  const [isLocalSaved, setIsLocalSaved] = useState<boolean>(false);
 
   if (!isOpen) return null;
 
@@ -86,9 +87,11 @@ export const SaveProjectModal: React.FC<Props> = ({ isOpen, onClose, onSaved }) 
         thumbnailUrl = thumbResult.url;
       }
 
+      let isFallback = false;
+
       if (currentProjectId) {
         // Update existing project
-        const { data, error: updateErr } = await projectService.updateProject(currentProjectId, {
+        const { data, error: updateErr, isLocalFallback } = await projectService.updateProject(currentProjectId, {
           name: projectName.trim(),
           thumbnail_url: thumbnailUrl,
           design_data: designData,
@@ -98,13 +101,15 @@ export const SaveProjectModal: React.FC<Props> = ({ isOpen, onClose, onSaved }) 
           throw new Error(updateErr || 'Failed to update project');
         }
 
+        isFallback = !!isLocalFallback;
         setCurrentProject(data.id, data.name);
         markSaved(data.updated_at);
+        setIsLocalSaved(isFallback);
         setSuccess(true);
         if (onSaved) onSaved(data.id, data.name);
       } else {
         // Create new project
-        const { data, error: createErr } = await projectService.createProject(user.id, {
+        const { data, error: createErr, isLocalFallback } = await projectService.createProject(user.id, {
           name: projectName.trim(),
           garment_type: garmentType,
           thumbnail_url: thumbnailUrl,
@@ -115,8 +120,10 @@ export const SaveProjectModal: React.FC<Props> = ({ isOpen, onClose, onSaved }) 
           throw new Error(createErr || 'Failed to create project');
         }
 
+        isFallback = !!isLocalFallback;
         setCurrentProject(data.id, data.name);
         markSaved(data.updated_at);
+        setIsLocalSaved(isFallback);
         setSuccess(true);
         if (onSaved) onSaved(data.id, data.name);
       }
@@ -124,7 +131,7 @@ export const SaveProjectModal: React.FC<Props> = ({ isOpen, onClose, onSaved }) 
       setTimeout(() => {
         setSuccess(false);
         onClose();
-      }, 1000);
+      }, isFallback ? 2200 : 1200);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save project');
     } finally {
@@ -167,9 +174,16 @@ export const SaveProjectModal: React.FC<Props> = ({ isOpen, onClose, onSaved }) 
         )}
 
         {success && (
-          <div className="mb-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-            <span>Project successfully saved!</span>
+          <div className="mb-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-xs text-emerald-700 dark:text-emerald-300 flex items-start gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-600 dark:text-emerald-400" />
+            <div>
+              <p className="font-semibold">Project successfully saved!</p>
+              {isLocalSaved && (
+                <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-1">
+                  Saved to local storage (remote Supabase table &apos;public.projects&apos; is awaiting migration in SQL Editor).
+                </p>
+              )}
+            </div>
           </div>
         )}
 

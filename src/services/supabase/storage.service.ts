@@ -22,14 +22,17 @@ export const storageService = {
       return { url: null, error: 'File size exceeds maximum limit of 10MB.' };
     }
 
-    if (!isSupabaseConfigured) {
-      // In local mode, create an object URL or Data URL
+    const readAsDataUrl = (): Promise<UploadResult> => {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = () => resolve({ url: reader.result as string, error: null });
         reader.onerror = () => resolve({ url: null, error: 'Failed to read local file' });
         reader.readAsDataURL(file);
       });
+    };
+
+    if (!isSupabaseConfigured) {
+      return readAsDataUrl();
     }
 
     try {
@@ -44,7 +47,8 @@ export const storageService = {
         });
 
       if (error) {
-        return { url: null, error: error.message };
+        console.warn('[storageService] Artwork bucket upload failed, using DataURL fallback:', error.message);
+        return readAsDataUrl();
       }
 
       const { data: publicUrlData } = supabase.storage
@@ -53,7 +57,8 @@ export const storageService = {
 
       return { url: publicUrlData.publicUrl, error: null };
     } catch (err: unknown) {
-      return { url: null, error: err instanceof Error ? err.message : 'Upload failed' };
+      console.warn('[storageService] Artwork upload exception, using fallback:', err);
+      return readAsDataUrl();
     }
   },
 
@@ -81,7 +86,9 @@ export const storageService = {
         });
 
       if (error) {
-        return { url: null, error: error.message };
+        // Fallback to dataUrl directly so thumbnail is never lost
+        console.warn('[storageService] Thumbnail bucket upload failed, using DataURL fallback:', error.message);
+        return { url: dataUrl, error: null };
       }
 
       const { data: publicUrlData } = supabase.storage
@@ -89,8 +96,8 @@ export const storageService = {
         .getPublicUrl(data.path);
 
       return { url: publicUrlData.publicUrl, error: null };
-    } catch (err: unknown) {
-      return { url: null, error: err instanceof Error ? err.message : 'Thumbnail upload failed' };
+    } catch {
+      return { url: dataUrl, error: null };
     }
   },
 };

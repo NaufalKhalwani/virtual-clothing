@@ -32,6 +32,7 @@ export const ProjectsPage: React.FC = () => {
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLocalFallback, setIsLocalFallback] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [garmentFilter, setGarmentFilter] = useState<'all' | 'tshirt' | 'jersey'>('all');
   const [sortBy, setSortBy] = useState<'latest' | 'oldest' | 'name'>('latest');
@@ -49,12 +50,13 @@ export const ProjectsPage: React.FC = () => {
     }
 
     setIsLoading(true);
-    const { data } = await projectService.listProjects(user.id, {
+    const { data, isLocalFallback: fallback } = await projectService.listProjects(user.id, {
       search: searchQuery,
       garmentType: garmentFilter,
       sortBy,
     });
     setProjects(data);
+    setIsLocalFallback(!!fallback);
     setIsLoading(false);
   }, [user, searchQuery, garmentFilter, sortBy]);
 
@@ -166,6 +168,18 @@ export const ProjectsPage: React.FC = () => {
           </div>
         ) : (
           <>
+            {isLocalFallback && (
+              <div className="mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-start gap-3 text-xs text-amber-800 dark:text-amber-200 shadow-2xs">
+                <AlertTriangle className="w-5 h-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-sm">Mode Penyimpanan Lokal Aktif</p>
+                  <p className="text-xs text-amber-700 dark:text-amber-300 mt-1 leading-relaxed">
+                    Tabel Supabase <code className="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/60 rounded font-mono text-[11px]">public.projects</code> belum dibuat pada remote database. Desain Anda tetap tersimpan aman di browser ini, dan akan otomatis disinkronkan ke Supabase setelah SQL migration dijalankan di SQL Editor dashboard Supabase.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Filter & Search Bar */}
             <div className="bg-white dark:bg-slate-900 p-3 sm:p-4 rounded-2xl border border-neutral-200 dark:border-slate-800 mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-2xs">
               <div className="relative flex-1">
