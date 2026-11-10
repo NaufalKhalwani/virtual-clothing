@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 import { useAuthStore } from '@/stores/auth.store';
 import { useDesignerStore } from '@/stores/designer.store';
 import { projectService } from '@/services/supabase/project.service';
@@ -15,7 +16,6 @@ import {
   Trash2,
   Edit2,
   ExternalLink,
-  Lock,
   ArrowRight,
   MoreVertical,
   Clock,
@@ -159,8 +159,8 @@ export const ProjectsPage: React.FC = () => {
         {/* Guest View: User Not Signed In */}
         {!user && !isLoadingAuth ? (
           <div className="p-8 sm:p-12 text-center bg-white dark:bg-slate-900 rounded-3xl border border-neutral-200 dark:border-slate-800 max-w-xl mx-auto my-8 shadow-xs">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4 border border-blue-200/60 dark:border-blue-900/50">
-              <Lock className="w-7 h-7" />
+            <div className="mb-5 flex justify-center">
+              <BrandLogo variant="symbol" size="xl" />
             </div>
             <h2 className="text-xl font-bold mb-2">Sign In to Save & Access Projects</h2>
             <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 max-w-md mx-auto mb-6 leading-relaxed">

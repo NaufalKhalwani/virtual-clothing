@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth.store';
 import { isSupabaseConfigured } from '@/services/supabase/supabase.client';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 import {
   X,
   Lock,
@@ -110,8 +111,8 @@ export const AuthModal: React.FC = () => {
 
         {/* Modal Header */}
         <div className="mb-6 text-center">
-          <div className="w-12 h-12 mx-auto rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-xs mb-3">
-            <Lock className="w-6 h-6" />
+          <div className="mb-3 flex justify-center">
+            <BrandLogo variant="symbol" size="lg" />
           </div>
           <h2 className="text-2xl font-bold tracking-tight">
             {authModalMode === 'signin' && 'Welcome Back'}

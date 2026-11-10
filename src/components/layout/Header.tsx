@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  Shirt,
   Sparkles,
   ArrowLeft,
   RotateCcw,
@@ -15,6 +14,7 @@ import {
 import { useDesignerStore } from '@/stores/designer.store';
 import { useAuthStore } from '@/stores/auth.store';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 import { AuthModal } from '@/features/auth/components/AuthModal';
 import { SaveProjectModal } from '@/features/projects/components/SaveProjectModal';
 import { ExportModal } from '@/features/export/components/ExportModal';
@@ -69,23 +69,8 @@ export const Header: React.FC = () => {
             </Link>
           )}
 
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-xs group-hover:bg-blue-700 transition-colors">
-              <Shirt className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-sm tracking-tight text-neutral-900 dark:text-white">
-                  Virtual Clothing
-                </span>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800 uppercase">
-                  3D
-                </span>
-              </div>
-              <p className="text-[11px] text-neutral-500 dark:text-neutral-400 hidden sm:block">
-                Interactive 3D Garment Customizer
-              </p>
-            </div>
+          <Link to="/" className="inline-flex items-center" title="Virtual Clothing Designer — 3D Apparel Studio">
+            <BrandLogo variant="horizontal" size="md" />
           </Link>
 
           {/* Navigation Links */}

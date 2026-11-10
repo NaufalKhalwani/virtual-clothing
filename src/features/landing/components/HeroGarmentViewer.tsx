@@ -115,6 +115,33 @@ const InteractiveControls: React.FC = () => {
   );
 };
 
+class HeroWebGLErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): { hasError: boolean } {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center text-xs text-neutral-500">
+          <Rotate3d className="w-8 h-8 text-neutral-400 mb-2 opacity-50" />
+          <p className="font-semibold text-neutral-700 dark:text-neutral-300">3D Preview Standby</p>
+          <p className="text-[11px] mt-1">WebGL is disabled or unsupported on this device.</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export const HeroGarmentViewer: React.FC = () => {
   const [selectedColor, setSelectedColor] = useState<string>(HERO_FABRIC_PRESETS[0].hex);
 
@@ -130,27 +157,29 @@ export const HeroGarmentViewer: React.FC = () => {
             </div>
           }
         >
-          <Canvas
-            shadows
-            camera={{ position: [0, 0, 2.2], fov: 45 }}
-            dpr={[1, 2]}
-            gl={{
-              antialias: true,
-              powerPreference: 'high-performance',
-            }}
-            className="w-full h-full cursor-grab active:cursor-grabbing"
-          >
-            <StudioLighting />
-            <GarmentMesh fabricColor={selectedColor} />
-            <ContactShadows
-              position={[0, -0.65, 0]}
-              opacity={0.45}
-              scale={2.2}
-              blur={1.8}
-              far={1.2}
-            />
-            <InteractiveControls />
-          </Canvas>
+          <HeroWebGLErrorBoundary>
+            <Canvas
+              shadows
+              camera={{ position: [0, 0, 2.2], fov: 45 }}
+              dpr={[1, 2]}
+              gl={{
+                antialias: true,
+                powerPreference: 'high-performance',
+              }}
+              className="w-full h-full cursor-grab active:cursor-grabbing"
+            >
+              <StudioLighting />
+              <GarmentMesh fabricColor={selectedColor} />
+              <ContactShadows
+                position={[0, -0.65, 0]}
+                opacity={0.45}
+                scale={2.2}
+                blur={1.8}
+                far={1.2}
+              />
+              <InteractiveControls />
+            </Canvas>
+          </HeroWebGLErrorBoundary>
         </Suspense>
       </div>
 

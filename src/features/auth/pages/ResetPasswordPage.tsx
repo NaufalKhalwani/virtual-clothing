@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Shirt, Eye, EyeOff, Loader2, AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 
 export const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();
@@ -59,18 +60,8 @@ export const ResetPasswordPage: React.FC = () => {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md px-4">
         <div className="flex flex-col items-center text-center mb-8">
-          <Link to="/" className="flex items-center gap-2.5 mb-3 group">
-            <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-xs group-hover:bg-blue-700 transition-colors">
-              <Shirt className="w-5 h-5" />
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-base tracking-tight text-neutral-900 dark:text-white">
-                Virtual Clothing
-              </span>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800 uppercase">
-                3D
-              </span>
-            </div>
+          <Link to="/" className="mb-4 inline-flex items-center" title="Back to Virtual Clothing Designer">
+            <BrandLogo variant="horizontal" size="lg" />
           </Link>
           <h2 className="text-2xl font-extrabold text-neutral-900 dark:text-white tracking-tight">
             Create new password

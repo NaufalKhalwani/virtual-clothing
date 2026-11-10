@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <!-- Primary Gradients -->
+    <linearGradient id="vcd-grad-left" x1="18" y1="22" x2="60" y2="104" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+    <linearGradient id="vcd-grad-right" x1="102" y1="22" x2="60" y2="104" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#60A5FA" />
+      <stop offset="50%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#1E40AF" />
+    </linearGradient>
+    <linearGradient id="vcd-grad-collar" x1="48" y1="18" x2="72" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#93C5FD" />
+      <stop offset="100%" stop-color="#3B82F6" />
+    </linearGradient>
+    <linearGradient id="vcd-grad-ambient" x1="60" y1="10" x2="60" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#1E3A8A" stop-opacity="0" />
+    </linearGradient>
+    <!-- Soft Drop Shadow for Standalone Usage -->
+    <filter id="vcd-shadow" x="0" y="4" width="120" height="116" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#1E3A8A" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <g filter="url(#vcd-shadow)">
+    <!-- Ambient 3D Glow Plane -->
+    <polygon points="60,14 106,40 106,94 60,110 14,94 14,40" fill="url(#vcd-grad-ambient)" />
+
+    <!-- Left Facet (Shoulder, Left Sleeve, Left Body) -->
+    <path
+      d="M60,44 L40,54 L40,96 L60,104 L60,44 Z"
+      fill="url(#vcd-grad-left)"
+    />
+    <path
+      d="M60,44 L48,22 L18,40 L28,62 L40,54 L60,44 Z"
+      fill="#2563EB"
+    />
+
+    <!-- Right Facet (Shoulder, Right Sleeve, Right Body) -->
+    <path
+      d="M60,44 L80,54 L80,96 L60,104 L60,44 Z"
+      fill="url(#vcd-grad-right)"
+    />
+    <path
+      d="M60,44 L72,22 L102,40 L92,62 L80,54 L60,44 Z"
+      fill="#3B82F6"
+    />
+
+    <!-- Dimensional V-Collar Ribbon -->
+    <path
+      d="M48,22 L60,38 L72,22 L60,28 Z"
+      fill="url(#vcd-grad-collar)"
+    />
+
+    <!-- 3D Geometric Edges & Spatial Seams -->
+    <path
+      d="M60,44 L60,104"
+      stroke="#BFDBFE"
+      stroke-width="1.5"
+      stroke-linecap="round"
+      opacity="0.85"
+    />
+    <path
+      d="M18,40 L48,22 L60,28 L72,22 L102,40 L92,62 L80,54 L80,96 L60,104 L40,96 L40,54 L28,62 Z"
+      stroke="#DBEAFE"
+      stroke-width="1.2"
+      stroke-linejoin="round"
+      opacity="0.4"
+    />
+
+    <!-- 3D Coordinate Vertex Pin (Apex) -->
+    <circle cx="60" cy="44" r="2.5" fill="#FFFFFF" />
+  </g>
+</svg>

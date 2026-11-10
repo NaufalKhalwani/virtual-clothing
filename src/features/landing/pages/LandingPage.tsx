@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 import { HeroGarmentViewer } from '@/features/landing/components/HeroGarmentViewer';
 import {
   Rotate3d,
@@ -394,14 +395,15 @@ export const LandingPage: React.FC = () => {
 
       {/* Footer */}
       <footer className="mt-auto py-8 bg-neutral-900 dark:bg-slate-950 text-neutral-400 text-xs border-t border-neutral-800">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <BrandLogo variant="horizontal" size="sm" />
           <p>© 2026 Virtual Clothing Designer. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <Link to="/designer/tshirt" className="hover:text-white transition-colors">
-              T-Shirt 3D Customizer
+              T-Shirt 3D Studio
             </Link>
             <Link to="/designer/jersey" className="hover:text-white transition-colors">
-              Jersey 3D Customizer
+              Jersey 3D Studio
             </Link>
           </div>
         </div>
