@@ -7,6 +7,7 @@ import {
   CANVAS_SIZE,
 } from '../services/canvas.service';
 import { useDesignerStore } from '@/stores/designer.store';
+import { compositeFabricArtworkWithPattern } from '@/features/jersey-editor/services/jersey-template-renderer';
 import type { Canvas, FabricObject } from 'fabric';
 
 interface ArtworkCanvasProps {
@@ -24,33 +25,51 @@ export const ArtworkCanvas: React.FC<ArtworkCanvasProps> = ({
 
   const selectedSurface = useDesignerStore((state) => state.selectedSurface);
   const surfaces = useDesignerStore((state) => state.surfaces);
+  const garmentType = useDesignerStore((state) => state.garmentType);
+  const jerseyStripes = useDesignerStore((state) => state.jerseyStripes);
+  const surfaceViewports = useDesignerStore((state) => state.surfaceViewports);
   const setSurfaceTexture = useDesignerStore((state) => state.setSurfaceTexture);
   const selectElement = useDesignerStore((state) => state.selectElement);
   const pushHistory = useDesignerStore((state) => state.pushHistory);
 
+  const currentVp = surfaceViewports?.[selectedSurface] || { zoom: 1.0, panX: 0, panY: 0 };
   const surfaceJson = surfaces[selectedSurface]?.canvasJson || null;
   const lastLoadedJsonRef = useRef<string | null>(null);
 
-  // Synchronize canvas to 3D texture and store
-  const syncTexture = useCallback(() => {
+  // Synchronize canvas to 3D texture and store with pattern layering
+  const syncTexture = useCallback(async () => {
     if (!fabricRef.current || isSwitchingSurface.current) return;
 
     const canvas = fabricRef.current;
     const objects = canvas.getObjects();
 
-    let dataUrl: string | null = null;
+    let rawDataUrl: string | null = null;
     if (objects.length > 0) {
-      dataUrl = exportCanvasAsDataUrl(canvas);
+      rawDataUrl = exportCanvasAsDataUrl(canvas);
     }
 
     const json = serializeCanvas(canvas);
     lastLoadedJsonRef.current = json;
-    setSurfaceTexture(selectedSurface, dataUrl, json);
 
-    if (dataUrl && onTextureUpdate) {
-      onTextureUpdate(selectedSurface, dataUrl);
+    if (garmentType === 'jersey') {
+      const compositedUrl = await compositeFabricArtworkWithPattern(
+        rawDataUrl,
+        jerseyStripes,
+        selectedSurface
+      );
+      setSurfaceTexture(selectedSurface, compositedUrl || rawDataUrl, json);
+
+      if (compositedUrl && onTextureUpdate) {
+        onTextureUpdate(selectedSurface, compositedUrl);
+      }
+    } else {
+      setSurfaceTexture(selectedSurface, rawDataUrl, json);
+
+      if (rawDataUrl && onTextureUpdate) {
+        onTextureUpdate(selectedSurface, rawDataUrl);
+      }
     }
-  }, [selectedSurface, setSurfaceTexture, onTextureUpdate]);
+  }, [selectedSurface, garmentType, jerseyStripes, setSurfaceTexture, onTextureUpdate]);
 
   // Initialize Canvas
   useEffect(() => {
@@ -140,11 +159,11 @@ export const ArtworkCanvas: React.FC<ArtworkCanvasProps> = ({
   }, [selectedSurface, surfaceJson]);
 
   return (
-    <div className="relative w-full max-w-[320px] aspect-square mx-auto rounded-2xl bg-neutral-100/80 dark:bg-slate-800/70 p-3 border border-neutral-200/80 dark:border-slate-700/80 shadow-inner flex items-center justify-center transition-colors duration-200">
-      {/* Decorative T-shirt printable boundary */}
-      <div className="absolute inset-4 rounded-xl border border-dashed border-neutral-300 dark:border-slate-600 pointer-events-none flex flex-col justify-between p-2">
+    <div className="relative w-full max-w-[340px] aspect-square mx-auto rounded-2xl bg-neutral-100/80 dark:bg-slate-800/70 p-3 border border-neutral-200/80 dark:border-slate-700/80 shadow-inner flex items-center justify-center transition-colors duration-200 overflow-hidden">
+      {/* Printable Area dashed guide */}
+      <div className="absolute inset-3 rounded-xl border border-dashed border-neutral-300 dark:border-slate-600 pointer-events-none flex flex-col justify-between p-2 z-10">
         <span className="text-[10px] font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest text-center">
-          {selectedSurface} Printable Boundary
+          {selectedSurface} Area
         </span>
         <div className="flex justify-between text-[9px] text-neutral-300 dark:text-slate-600 font-mono">
           <span>+</span>
@@ -152,16 +171,23 @@ export const ArtworkCanvas: React.FC<ArtworkCanvasProps> = ({
         </div>
       </div>
 
-      {/* Fabric.js Canvas Element */}
+      {/* Fabric.js Canvas Viewport with Independent Zoom & Pan */}
       <div className="w-full h-full relative flex items-center justify-center overflow-hidden rounded-lg">
-        <canvas
-          ref={canvasElRef}
+        <div
+          className="w-full h-full relative transition-transform duration-100 origin-center flex items-center justify-center"
           style={{
-            width: '100%',
-            height: '100%',
-            touchAction: 'none',
+            transform: `scale(${currentVp.zoom}) translate(${currentVp.panX}px, ${currentVp.panY}px)`,
           }}
-        />
+        >
+          <canvas
+            ref={canvasElRef}
+            style={{
+              width: '100%',
+              height: '100%',
+              touchAction: 'none',
+            }}
+          />
+        </div>
       </div>
     </div>
   );

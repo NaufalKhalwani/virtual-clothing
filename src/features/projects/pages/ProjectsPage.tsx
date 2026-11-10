@@ -92,6 +92,7 @@ export const ProjectsPage: React.FC = () => {
             jerseyStripes: design.jerseyStripes,
             leftSleevePattern: design.leftSleevePattern,
             rightSleevePattern: design.rightSleevePattern,
+            surfaceViewports: design.surfaceViewports,
           }
         : undefined
     );

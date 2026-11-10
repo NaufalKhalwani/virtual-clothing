@@ -3,6 +3,7 @@ import type {
   JerseyColors,
   StripeElementConfig,
   SleevePatternConfig,
+  SurfaceViewport,
 } from '@/features/jersey-editor/types/jersey-template.types';
 
 export type GarmentType = 'tshirt' | 'jersey';
@@ -84,6 +85,9 @@ export interface DesignerState {
   leftSleevePattern: SleevePatternConfig;
   rightSleevePattern: SleevePatternConfig;
 
+  // Independent 2D Canvas Surface Viewports (Zoom & Pan)
+  surfaceViewports: Record<string, SurfaceViewport>;
+
   // History
   history: {
     past: Array<Record<string, SurfaceDesign>>;
@@ -116,6 +120,14 @@ export interface DesignerState {
   setLeftSleevePattern: (config: Partial<SleevePatternConfig>) => void;
   setRightSleevePattern: (config: Partial<SleevePatternConfig>) => void;
 
+  // Viewport Zoom & Pan Actions
+  setSurfaceZoom: (surface: string, zoom: number) => void;
+  setSurfacePan: (surface: string, panX: number, panY: number) => void;
+  resetSurfaceViewport: (surface: string) => void;
+  fitSurfaceToCanvas: (surface: string) => void;
+  centerSurfaceHorizontally: (surface: string) => void;
+  centerSurfaceVertically: (surface: string) => void;
+
   // Project persistence actions
   setCurrentProject: (id: string | null, name: string) => void;
   loadProjectData: (
@@ -130,6 +142,7 @@ export interface DesignerState {
       jerseyStripes?: StripeElementConfig[];
       leftSleevePattern?: SleevePatternConfig;
       rightSleevePattern?: SleevePatternConfig;
+      surfaceViewports?: Record<string, SurfaceViewport>;
     }
   ) => void;
   setIsSaving: (isSaving: boolean) => void;

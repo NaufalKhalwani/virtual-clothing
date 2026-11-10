@@ -5,7 +5,10 @@ import type {
   StripeElementConfig,
 } from '../types/jersey-template.types';
 import type { DesignText, SurfaceDesign } from '@/types/designer.types';
-import { generateSleevePatternDataUrl } from './jersey-pattern.service';
+import {
+  generateSleevePatternDataUrl,
+  drawFabricPatternToContext,
+} from './jersey-pattern.service';
 
 /**
  * Builds standard 2D and 3D surface representations for a selected Jersey Template
@@ -73,7 +76,7 @@ export const buildJerseyTemplateSurfaces = (
       color: colors.secondary || s.color,
       textAlign: 'center',
       x: 512,
-      y: 480,
+      y: 490,
       rotation: 0,
       scaleX: 1,
       scaleY: 1,
@@ -126,7 +129,7 @@ export const buildJerseyTemplateSurfaces = (
     });
   }
 
-  // 4. Render 2D Offscreen Canvas Composite for Front & Back
+  // 4. Render 2D Offscreen Canvas Composite for Front & Back (Pattern Base -> Text Top)
   const frontDataUrl = renderCompositeTexture(frontElements, stripes, 'front');
   const backDataUrl = renderCompositeTexture(backElements, stripes, 'back');
 
@@ -162,12 +165,15 @@ export const buildJerseyTemplateSurfaces = (
 };
 
 /**
- * Composite renderer for Torso Surfaces (combining stripes + athletic typography)
+ * Composite renderer for Torso Surfaces:
+ * 1. Base Fabric Pattern / Stripes
+ * 2. Text Protection exclusion boxes
+ * 3. Text and Player numbers rendered on top
  */
 export const renderCompositeTexture = (
   textElements: DesignText[],
   stripes: StripeElementConfig[],
-  surface: 'front' | 'back',
+  surface: 'front' | 'back' | string,
   width = 1024,
   height = 1024
 ): string => {
@@ -177,34 +183,10 @@ export const renderCompositeTexture = (
   const ctx = canvas.getContext('2d');
   if (!ctx) return '';
 
-  // 1. Draw stripes if configured
-  const relevantStripes = stripes.filter((s) => s.surface === 'both' || s.surface === surface);
-  for (const s of relevantStripes) {
-    ctx.fillStyle = s.color;
-    ctx.globalAlpha = s.opacity ?? 1;
+  // 1. Draw fabric pattern & stripes first (Base Layer)
+  drawFabricPatternToContext(ctx, stripes, surface, width, height);
 
-    if (s.orientation === 'horizontal') {
-      const count = Math.max(1, s.count);
-      const totalSpan = (count - 1) * s.spacing;
-      const startY = s.positionY - totalSpan / 2;
-
-      for (let i = 0; i < count; i++) {
-        const y = startY + i * s.spacing - s.thickness / 2;
-        ctx.fillRect(0, y, width, s.thickness);
-      }
-    } else {
-      const count = Math.max(1, s.count);
-      const totalSpan = (count - 1) * s.spacing;
-      const startX = s.positionX - totalSpan / 2;
-
-      for (let i = 0; i < count; i++) {
-        const x = startX + i * s.spacing - s.thickness / 2;
-        ctx.fillRect(x, 0, s.thickness, height);
-      }
-    }
-  }
-
-  // 2. Draw text typography elements
+  // 2. Draw text typography elements on top (Protected Top Layer)
   ctx.globalAlpha = 1.0;
   for (const el of textElements) {
     ctx.font = `${el.fontWeight || 'bold'} ${el.fontSize}px ${el.fontFamily}`;
@@ -212,6 +194,45 @@ export const renderCompositeTexture = (
     ctx.textAlign = el.textAlign || 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(el.content, el.x, el.y);
+  }
+
+  return canvas.toDataURL('image/png');
+};
+
+/**
+ * Composites user's Fabric artwork/logos with underlying fabric stripes pattern
+ */
+export const compositeFabricArtworkWithPattern = async (
+  fabricDataUrl: string | null,
+  stripes: StripeElementConfig[],
+  surface: 'front' | 'back' | string,
+  width = 1024,
+  height = 1024
+): Promise<string | null> => {
+  const hasStripes = stripes.some((s) => s.surface === 'both' || s.surface === surface);
+  if (!hasStripes && !fabricDataUrl) return null;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+
+  // 1. Draw fabric pattern & stripes first
+  drawFabricPatternToContext(ctx, stripes, surface, width, height);
+
+  // 2. Draw user's artwork & text from Fabric canvas on top
+  if (fabricDataUrl) {
+    await new Promise<void>((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        ctx.globalAlpha = 1.0;
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve();
+      };
+      img.onerror = () => resolve();
+      img.src = fabricDataUrl;
+    });
   }
 
   return canvas.toDataURL('image/png');

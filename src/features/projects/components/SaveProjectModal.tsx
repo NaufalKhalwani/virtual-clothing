@@ -93,6 +93,7 @@ export const SaveProjectModal: React.FC<Props> = ({ isOpen, onClose, onSaved }) 
               jerseyStripes: useDesignerStore.getState().jerseyStripes,
               leftSleevePattern: useDesignerStore.getState().leftSleevePattern,
               rightSleevePattern: useDesignerStore.getState().rightSleevePattern,
+              surfaceViewports: useDesignerStore.getState().surfaceViewports,
             }
           : {}),
       };

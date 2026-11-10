@@ -5,6 +5,7 @@ import type {
   JerseyColors,
   StripeElementConfig,
   SleevePatternConfig,
+  SurfaceViewport,
 } from '@/features/jersey-editor/types/jersey-template.types';
 import { DEFAULT_TSHIRT_COLOR } from '@/constants/design.constants';
 import {
@@ -33,8 +34,18 @@ const createDefaultJerseySurfaces = (): Record<string, SurfaceDesign> => ({
   rightShoulder: { color: DEFAULT_TSHIRT_COLOR, elements: [], textureDataUrl: null, canvasJson: null },
 });
 
+const createDefaultSurfaceViewports = (): Record<string, SurfaceViewport> => ({
+  front: { zoom: 1.0, panX: 0, panY: 0 },
+  back: { zoom: 1.0, panX: 0, panY: 0 },
+  left: { zoom: 1.0, panX: 0, panY: 0 },
+  right: { zoom: 1.0, panX: 0, panY: 0 },
+  leftShoulder: { zoom: 1.0, panX: 0, panY: 0 },
+  rightShoulder: { zoom: 1.0, panX: 0, panY: 0 },
+});
+
 const initialTShirtSurfaces = createDefaultTShirtSurfaces();
 const initialJerseySurfaces = createDefaultJerseySurfaces();
+const initialSurfaceViewports = createDefaultSurfaceViewports();
 
 export const useDesignerStore = create<DesignerState>((set, get) => ({
   garmentType: 'tshirt',
@@ -56,6 +67,9 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   jerseyStripes: [],
   leftSleevePattern: { ...DEFAULT_LEFT_SLEEVE },
   rightSleevePattern: { ...DEFAULT_RIGHT_SLEEVE },
+
+  // Independent 2D Viewports
+  surfaceViewports: initialSurfaceViewports,
 
   history: {
     past: [],
@@ -529,6 +543,77 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     });
   },
 
+  // Viewport Zoom & Pan Actions (Independent per Surface)
+  setSurfaceZoom: (surface: string, zoom: number) => {
+    const clamped = Math.min(2.5, Math.max(0.5, zoom));
+    set((state) => ({
+      surfaceViewports: {
+        ...state.surfaceViewports,
+        [surface]: {
+          ...(state.surfaceViewports[surface] || { panX: 0, panY: 0 }),
+          zoom: clamped,
+        },
+      },
+    }));
+  },
+
+  setSurfacePan: (surface: string, panX: number, panY: number) => {
+    const clampedX = Math.min(300, Math.max(-300, panX));
+    const clampedY = Math.min(300, Math.max(-300, panY));
+    set((state) => ({
+      surfaceViewports: {
+        ...state.surfaceViewports,
+        [surface]: {
+          ...(state.surfaceViewports[surface] || { zoom: 1.0 }),
+          panX: clampedX,
+          panY: clampedY,
+        },
+      },
+    }));
+  },
+
+  resetSurfaceViewport: (surface: string) => {
+    set((state) => ({
+      surfaceViewports: {
+        ...state.surfaceViewports,
+        [surface]: { zoom: 1.0, panX: 0, panY: 0 },
+      },
+    }));
+  },
+
+  fitSurfaceToCanvas: (surface: string) => {
+    set((state) => ({
+      surfaceViewports: {
+        ...state.surfaceViewports,
+        [surface]: { zoom: 1.0, panX: 0, panY: 0 },
+      },
+    }));
+  },
+
+  centerSurfaceHorizontally: (surface: string) => {
+    set((state) => ({
+      surfaceViewports: {
+        ...state.surfaceViewports,
+        [surface]: {
+          ...(state.surfaceViewports[surface] || { zoom: 1.0, panY: 0 }),
+          panX: 0,
+        },
+      },
+    }));
+  },
+
+  centerSurfaceVertically: (surface: string) => {
+    set((state) => ({
+      surfaceViewports: {
+        ...state.surfaceViewports,
+        [surface]: {
+          ...(state.surfaceViewports[surface] || { zoom: 1.0, panX: 0 }),
+          panY: 0,
+        },
+      },
+    }));
+  },
+
   setCurrentProject: (id: string | null, name: string) => {
     set({ currentProjectId: id, currentProjectName: name });
   },
@@ -553,6 +638,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
             jerseyStripes: templateData?.jerseyStripes || [],
             leftSleevePattern: templateData?.leftSleevePattern || { ...DEFAULT_LEFT_SLEEVE },
             rightSleevePattern: templateData?.rightSleevePattern || { ...DEFAULT_RIGHT_SLEEVE },
+            surfaceViewports: templateData?.surfaceViewports || createDefaultSurfaceViewports(),
           }
         : { tshirtSurfaces: loadedSurfaces }),
       currentProjectId: projectId || null,

@@ -4,6 +4,7 @@ import type {
   JerseyColors,
   StripeElementConfig,
   SleevePatternConfig,
+  SurfaceViewport,
 } from '@/features/jersey-editor/types/jersey-template.types';
 
 export interface SurfaceDesignData {
@@ -25,6 +26,7 @@ export interface ProjectDesignData {
   jerseyStripes?: StripeElementConfig[];
   leftSleevePattern?: SleevePatternConfig;
   rightSleevePattern?: SleevePatternConfig;
+  surfaceViewports?: Record<string, SurfaceViewport>;
 }
 
 export interface Project {

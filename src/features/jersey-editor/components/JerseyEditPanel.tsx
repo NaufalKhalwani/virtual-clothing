@@ -12,6 +12,7 @@ import { JerseyColorCustomizer } from './JerseyColorCustomizer';
 import { JerseyStripeBuilder } from './JerseyStripeBuilder';
 import { JerseySleeveCustomizer } from './JerseySleeveCustomizer';
 import { JerseyTextCustomizer } from './JerseyTextCustomizer';
+import { JerseyViewportControls } from './JerseyViewportControls';
 import {
   Undo2,
   Redo2,
@@ -172,9 +173,9 @@ export const JerseyEditPanel: React.FC = () => {
         <JerseyPanelSelector />
       </div>
 
-      {/* 2D Interactive Composition Canvas */}
-      <div className="p-3.5 border-b border-neutral-100 dark:border-slate-800 bg-white dark:bg-slate-900">
-        <div className="flex items-center justify-between mb-2">
+      {/* 2D Interactive Composition Canvas & Independent Viewport Controls */}
+      <div className="p-3.5 border-b border-neutral-100 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2.5">
+        <div className="flex items-center justify-between">
           <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 capitalize">
             {selectedSurface} Canvas (2D)
           </span>
@@ -186,6 +187,9 @@ export const JerseyEditPanel: React.FC = () => {
           onCanvasReady={(inst) => setCanvasInstance(inst)}
           onTextureUpdate={() => {}}
         />
+
+        {/* Independent Zoom & Pan Adjustment */}
+        <JerseyViewportControls />
       </div>
 
       {/* Studio Category Navigation Tabs */}
