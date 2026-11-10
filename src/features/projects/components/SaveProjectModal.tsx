@@ -86,6 +86,15 @@ export const SaveProjectModal: React.FC<Props> = ({ isOpen, onClose, onSaved }) 
         baseColor,
         selectedSurface,
         surfaces: serializedSurfaces,
+        ...(garmentType === 'jersey'
+          ? {
+              jerseyTemplateId: useDesignerStore.getState().jerseyTemplateId,
+              jerseyColors: useDesignerStore.getState().jerseyColors,
+              jerseyStripes: useDesignerStore.getState().jerseyStripes,
+              leftSleevePattern: useDesignerStore.getState().leftSleevePattern,
+              rightSleevePattern: useDesignerStore.getState().rightSleevePattern,
+            }
+          : {}),
       };
 
       // Generate front thumbnail from active or front surface

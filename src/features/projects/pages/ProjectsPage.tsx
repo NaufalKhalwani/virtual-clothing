@@ -84,7 +84,16 @@ export const ProjectsPage: React.FC = () => {
       design.baseColor,
       restoredSurfaces,
       project.id,
-      project.name
+      project.name,
+      project.garment_type === 'jersey'
+        ? {
+            jerseyTemplateId: design.jerseyTemplateId,
+            jerseyColors: design.jerseyColors,
+            jerseyStripes: design.jerseyStripes,
+            leftSleevePattern: design.leftSleevePattern,
+            rightSleevePattern: design.rightSleevePattern,
+          }
+        : undefined
     );
 
     if (project.garment_type === 'jersey') {

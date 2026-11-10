@@ -25,15 +25,15 @@ const PANEL_DECAL_CONFIG: Record<
 > = {
   // Front Body (V-neck chest & stomach)
   front: {
-    targetMesh: 'Cloth_mesh_12',
-    position: [0, 1.35, -0.14],
+    targetMesh: 'Cloth_mesh_18',
+    position: [0, 1.35, 0.12],
     rotation: [0, 0, 0],
     scale: [0.26, 0.32, 0.2],
   },
   // Back Body (Upper back, squad number, player name)
   back: {
-    targetMesh: 'Cloth_mesh_18',
-    position: [0, 1.35, 0.12],
+    targetMesh: 'Cloth_mesh_12',
+    position: [0, 1.35, -0.14],
     rotation: [0, Math.PI, 0],
     scale: [0.26, 0.32, 0.2],
   },
@@ -71,6 +71,9 @@ export const JerseyModel: React.FC = () => {
   const gltf = useGLTF(JERSEY_MODEL_PATH) as unknown as GLTFResult;
   const baseColor = useDesignerStore((state) => state.baseColor);
   const surfaces = useDesignerStore((state) => state.surfaces);
+  const jerseyColors = useDesignerStore((state) => state.jerseyColors);
+  const leftSleevePattern = useDesignerStore((state) => state.leftSleevePattern);
+  const rightSleevePattern = useDesignerStore((state) => state.rightSleevePattern);
   const wireframe = useUIStore((state) => state.wireframe);
 
   // Textures for all 6 jersey surfaces
@@ -85,6 +88,26 @@ export const JerseyModel: React.FC = () => {
 
   // Dedicated PBR Fabric material for Jersey Body
   const fabricMaterial = useMemo(() => {
+    return new THREE.MeshStandardMaterial({
+      color: '#FFFFFF',
+      roughness: 0.65,
+      metalness: 0.05,
+      side: THREE.DoubleSide,
+    });
+  }, []);
+
+  // Left Sleeve PBR material
+  const sleeveLeftMaterial = useMemo(() => {
+    return new THREE.MeshStandardMaterial({
+      color: '#FFFFFF',
+      roughness: 0.65,
+      metalness: 0.05,
+      side: THREE.DoubleSide,
+    });
+  }, []);
+
+  // Right Sleeve PBR material
+  const sleeveRightMaterial = useMemo(() => {
     return new THREE.MeshStandardMaterial({
       color: '#FFFFFF',
       roughness: 0.65,
@@ -113,19 +136,39 @@ export const JerseyModel: React.FC = () => {
     });
   }, []);
 
-  // Sync fabric color and wireframe dynamically
+  // Sync fabric colors and wireframe dynamically
   useEffect(() => {
-    fabricMaterial.color.set(baseColor);
+    fabricMaterial.color.set(jerseyColors?.primary || baseColor);
     fabricMaterial.wireframe = wireframe;
     fabricMaterial.needsUpdate = true;
 
-    collarMaterial.color.set(baseColor);
+    sleeveLeftMaterial.color.set(leftSleevePattern?.primaryColor || jerseyColors?.sleeve || baseColor);
+    sleeveLeftMaterial.wireframe = wireframe;
+    sleeveLeftMaterial.needsUpdate = true;
+
+    sleeveRightMaterial.color.set(rightSleevePattern?.primaryColor || jerseyColors?.sleeve || baseColor);
+    sleeveRightMaterial.wireframe = wireframe;
+    sleeveRightMaterial.needsUpdate = true;
+
+    collarMaterial.color.set(jerseyColors?.collar || baseColor);
     collarMaterial.wireframe = wireframe;
     collarMaterial.needsUpdate = true;
 
+    trimMaterial.color.set(jerseyColors?.accent || '#E2E8F0');
     trimMaterial.wireframe = wireframe;
     trimMaterial.needsUpdate = true;
-  }, [baseColor, wireframe, fabricMaterial, collarMaterial, trimMaterial]);
+  }, [
+    baseColor,
+    jerseyColors,
+    leftSleevePattern,
+    rightSleevePattern,
+    wireframe,
+    fabricMaterial,
+    sleeveLeftMaterial,
+    sleeveRightMaterial,
+    collarMaterial,
+    trimMaterial,
+  ]);
 
   // Extract all meshes from GLTF hierarchy
   const { targetMeshes, otherMeshes } = useMemo(() => {
@@ -219,7 +262,7 @@ export const JerseyModel: React.FC = () => {
 
   return (
     <Center top>
-      <group rotation={[0, Math.PI, 0]} dispose={null}>
+      <group rotation={[0, 0, 0]} dispose={null}>
         {/* 1. Front Body Mesh with Front Decal */}
         {targetMeshes.front && (
           <mesh
@@ -268,7 +311,7 @@ export const JerseyModel: React.FC = () => {
             castShadow
             receiveShadow
             geometry={targetMeshes.left.geometry}
-            material={fabricMaterial}
+            material={sleeveLeftMaterial}
           >
             {panelTextures.left && (
               <Decal
@@ -289,7 +332,7 @@ export const JerseyModel: React.FC = () => {
             castShadow
             receiveShadow
             geometry={targetMeshes.right.geometry}
-            material={fabricMaterial}
+            material={sleeveRightMaterial}
           >
             {panelTextures.right && (
               <Decal

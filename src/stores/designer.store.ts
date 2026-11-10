@@ -1,6 +1,23 @@
 import { create } from 'zustand';
-import type { DesignerState, DesignElement, GarmentType, SurfaceDesign } from '@/types/designer.types';
+import type { DesignerState, DesignElement, GarmentType, SurfaceDesign, DesignText } from '@/types/designer.types';
+import type {
+  JerseyTemplateId,
+  JerseyColors,
+  StripeElementConfig,
+  SleevePatternConfig,
+} from '@/features/jersey-editor/types/jersey-template.types';
 import { DEFAULT_TSHIRT_COLOR } from '@/constants/design.constants';
+import {
+  DEFAULT_JERSEY_COLORS,
+  DEFAULT_LEFT_SLEEVE,
+  DEFAULT_RIGHT_SLEEVE,
+  JERSEY_TEMPLATES,
+} from '@/features/jersey-editor/constants/jersey-templates.constants';
+import { generateSleevePatternDataUrl } from '@/features/jersey-editor/services/jersey-pattern.service';
+import {
+  buildJerseyTemplateSurfaces,
+  renderCompositeTexture,
+} from '@/features/jersey-editor/services/jersey-template-renderer';
 
 const createDefaultTShirtSurfaces = (): Record<string, SurfaceDesign> => ({
   front: { color: DEFAULT_TSHIRT_COLOR, elements: [], textureDataUrl: null, canvasJson: null },
@@ -32,6 +49,13 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
   tshirtSurfaces: initialTShirtSurfaces,
   jerseySurfaces: initialJerseySurfaces,
   surfaces: initialTShirtSurfaces,
+
+  // Jersey Template & Advanced Customization
+  jerseyTemplateId: null,
+  jerseyColors: { ...DEFAULT_JERSEY_COLORS },
+  jerseyStripes: [],
+  leftSleevePattern: { ...DEFAULT_LEFT_SLEEVE },
+  rightSleevePattern: { ...DEFAULT_RIGHT_SLEEVE },
 
   history: {
     past: [],
@@ -274,13 +298,18 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       const newJersey = createDefaultJerseySurfaces();
       set({
         garmentType: 'jersey',
-        baseColor: DEFAULT_TSHIRT_COLOR,
+        baseColor: DEFAULT_JERSEY_COLORS.primary,
         jerseySurfaces: newJersey,
         surfaces: newJersey,
         selectedSurface: 'front',
         selectedElementId: null,
         currentProjectId: null,
         currentProjectName: 'Untitled Design',
+        jerseyTemplateId: null,
+        jerseyColors: { ...DEFAULT_JERSEY_COLORS },
+        jerseyStripes: [],
+        leftSleevePattern: { ...DEFAULT_LEFT_SLEEVE },
+        rightSleevePattern: { ...DEFAULT_RIGHT_SLEEVE },
         isDirty: false,
         history: { past: [], future: [] },
       });
@@ -301,17 +330,230 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     }
   },
 
+  setJerseyTemplate: (templateId: JerseyTemplateId) => {
+    get().pushHistory();
+    const preset = JERSEY_TEMPLATES.find((t) => t.id === templateId) || JERSEY_TEMPLATES[0];
+    const newSurfaces = buildJerseyTemplateSurfaces(
+      preset,
+      preset.defaultColors,
+      preset.defaultStripes,
+      preset.defaultLeftSleeve,
+      preset.defaultRightSleeve,
+      get().surfaces
+    );
+
+    set({
+      jerseyTemplateId: templateId,
+      jerseyColors: { ...preset.defaultColors },
+      jerseyStripes: [...preset.defaultStripes],
+      leftSleevePattern: { ...preset.defaultLeftSleeve },
+      rightSleevePattern: { ...preset.defaultRightSleeve },
+      baseColor: preset.defaultColors.primary,
+      surfaces: newSurfaces,
+      jerseySurfaces: newSurfaces,
+      isDirty: true,
+    });
+  },
+
+  setJerseyColors: (colors: Partial<JerseyColors>) => {
+    get().pushHistory();
+    const state = get();
+    const updatedColors: JerseyColors = { ...state.jerseyColors, ...colors };
+
+    // Update sleeve patterns base color if sleeve color changed
+    const updatedLeft = {
+      ...state.leftSleevePattern,
+      primaryColor: updatedColors.sleeve,
+      accentColor: updatedColors.accent,
+    };
+    const updatedRight = {
+      ...state.rightSleevePattern,
+      primaryColor: updatedColors.sleeve,
+      accentColor: updatedColors.accent,
+    };
+
+    // Update stripes color if stripe color changed
+    const updatedStripes = colors.stripe
+      ? state.jerseyStripes.map((s) => ({ ...s, color: colors.stripe! }))
+      : state.jerseyStripes;
+
+    const leftTex = generateSleevePatternDataUrl(updatedLeft);
+    const rightTex = generateSleevePatternDataUrl(updatedRight);
+
+    // Re-render front and back composite textures
+    const frontTexts = (state.surfaces.front?.elements || []).filter(
+      (el) => el.type === 'text'
+    ) as DesignText[];
+    const backTexts = (state.surfaces.back?.elements || []).filter(
+      (el) => el.type === 'text'
+    ) as DesignText[];
+
+    const frontTex = renderCompositeTexture(frontTexts, updatedStripes, 'front');
+    const backTex = renderCompositeTexture(backTexts, updatedStripes, 'back');
+
+    const updatedSurfaces: Record<string, SurfaceDesign> = {
+      ...state.surfaces,
+      front: {
+        ...(state.surfaces.front || { elements: [] }),
+        color: updatedColors.primary,
+        textureDataUrl: frontTex || state.surfaces.front?.textureDataUrl,
+      },
+      back: {
+        ...(state.surfaces.back || { elements: [] }),
+        color: updatedColors.primary,
+        textureDataUrl: backTex || state.surfaces.back?.textureDataUrl,
+      },
+      left: {
+        ...(state.surfaces.left || { elements: [] }),
+        color: updatedColors.sleeve,
+        textureDataUrl: leftTex,
+      },
+      right: {
+        ...(state.surfaces.right || { elements: [] }),
+        color: updatedColors.sleeve,
+        textureDataUrl: rightTex,
+      },
+      leftShoulder: {
+        ...(state.surfaces.leftShoulder || { elements: [] }),
+        color: updatedColors.primary,
+      },
+      rightShoulder: {
+        ...(state.surfaces.rightShoulder || { elements: [] }),
+        color: updatedColors.primary,
+      },
+    };
+
+    set({
+      jerseyColors: updatedColors,
+      jerseyStripes: updatedStripes,
+      leftSleevePattern: updatedLeft,
+      rightSleevePattern: updatedRight,
+      baseColor: updatedColors.primary,
+      surfaces: updatedSurfaces,
+      jerseySurfaces: updatedSurfaces,
+      isDirty: true,
+    });
+  },
+
+  setJerseyStripes: (stripes: StripeElementConfig[]) => {
+    get().pushHistory();
+    const state = get();
+    const frontTexts = (state.surfaces.front?.elements || []).filter(
+      (el) => el.type === 'text'
+    ) as DesignText[];
+    const backTexts = (state.surfaces.back?.elements || []).filter(
+      (el) => el.type === 'text'
+    ) as DesignText[];
+
+    const frontTex = renderCompositeTexture(frontTexts, stripes, 'front');
+    const backTex = renderCompositeTexture(backTexts, stripes, 'back');
+
+    const updatedSurfaces: Record<string, SurfaceDesign> = {
+      ...state.surfaces,
+      front: {
+        ...(state.surfaces.front || { elements: [] }),
+        textureDataUrl: frontTex,
+      },
+      back: {
+        ...(state.surfaces.back || { elements: [] }),
+        textureDataUrl: backTex,
+      },
+    };
+
+    set({
+      jerseyStripes: stripes,
+      surfaces: updatedSurfaces,
+      jerseySurfaces: updatedSurfaces,
+      isDirty: true,
+    });
+  },
+
+  addJerseyStripe: (stripe: StripeElementConfig) => {
+    const newStripes = [...get().jerseyStripes, stripe];
+    get().setJerseyStripes(newStripes);
+  },
+
+  updateJerseyStripe: (id: string, updates: Partial<StripeElementConfig>) => {
+    const newStripes = get().jerseyStripes.map((s) => (s.id === id ? { ...s, ...updates } : s));
+    get().setJerseyStripes(newStripes);
+  },
+
+  removeJerseyStripe: (id: string) => {
+    const newStripes = get().jerseyStripes.filter((s) => s.id !== id);
+    get().setJerseyStripes(newStripes);
+  },
+
+  setLeftSleevePattern: (config: Partial<SleevePatternConfig>) => {
+    get().pushHistory();
+    const state = get();
+    const updated: SleevePatternConfig = { ...state.leftSleevePattern, ...config };
+    const texUrl = generateSleevePatternDataUrl(updated);
+
+    const updatedSurfaces: Record<string, SurfaceDesign> = {
+      ...state.surfaces,
+      left: {
+        ...(state.surfaces.left || { elements: [] }),
+        color: updated.primaryColor,
+        textureDataUrl: texUrl,
+      },
+    };
+
+    set({
+      leftSleevePattern: updated,
+      surfaces: updatedSurfaces,
+      jerseySurfaces: updatedSurfaces,
+      isDirty: true,
+    });
+  },
+
+  setRightSleevePattern: (config: Partial<SleevePatternConfig>) => {
+    get().pushHistory();
+    const state = get();
+    const updated: SleevePatternConfig = { ...state.rightSleevePattern, ...config };
+    const texUrl = generateSleevePatternDataUrl(updated);
+
+    const updatedSurfaces: Record<string, SurfaceDesign> = {
+      ...state.surfaces,
+      right: {
+        ...(state.surfaces.right || { elements: [] }),
+        color: updated.primaryColor,
+        textureDataUrl: texUrl,
+      },
+    };
+
+    set({
+      rightSleevePattern: updated,
+      surfaces: updatedSurfaces,
+      jerseySurfaces: updatedSurfaces,
+      isDirty: true,
+    });
+  },
+
   setCurrentProject: (id: string | null, name: string) => {
     set({ currentProjectId: id, currentProjectName: name });
   },
 
-  loadProjectData: (garmentType, baseColor, loadedSurfaces, projectId, projectName) => {
+  loadProjectData: (
+    garmentType,
+    baseColor,
+    loadedSurfaces,
+    projectId,
+    projectName,
+    templateData
+  ) => {
     set({
       garmentType,
       baseColor,
       surfaces: loadedSurfaces,
       ...(garmentType === 'jersey'
-        ? { jerseySurfaces: loadedSurfaces }
+        ? {
+            jerseySurfaces: loadedSurfaces,
+            jerseyTemplateId: templateData?.jerseyTemplateId || null,
+            jerseyColors: templateData?.jerseyColors || { ...DEFAULT_JERSEY_COLORS },
+            jerseyStripes: templateData?.jerseyStripes || [],
+            leftSleevePattern: templateData?.leftSleevePattern || { ...DEFAULT_LEFT_SLEEVE },
+            rightSleevePattern: templateData?.rightSleevePattern || { ...DEFAULT_RIGHT_SLEEVE },
+          }
         : { tshirtSurfaces: loadedSurfaces }),
       currentProjectId: projectId || null,
       currentProjectName: projectName || 'Untitled Design',

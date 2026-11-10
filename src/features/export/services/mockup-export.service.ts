@@ -17,14 +17,14 @@ const JERSEY_DECAL_SPECS: Record<
   }
 > = {
   front: {
-    targetMesh: 'Cloth_mesh_12',
-    position: [0, 1.35, -0.14],
+    targetMesh: 'Cloth_mesh_18',
+    position: [0, 1.35, 0.12],
     rotation: [0, 0, 0],
     scale: [0.26, 0.32, 0.2],
   },
   back: {
-    targetMesh: 'Cloth_mesh_18',
-    position: [0, 1.35, 0.12],
+    targetMesh: 'Cloth_mesh_12',
+    position: [0, 1.35, -0.14],
     rotation: [0, Math.PI, 0],
     scale: [0.26, 0.32, 0.2],
   },
@@ -245,7 +245,7 @@ export const render3DMockupToDataUrl = async (params: Render3DMockupParams): Pro
   } else {
     // Jersey Model Assembly
     const jerseyGroup = gltf.scene.clone();
-    jerseyGroup.rotation.set(0, Math.PI, 0); // Align Front to [0, 0, 2.5]
+    jerseyGroup.rotation.set(0, 0, 0); // Model naturally faces +Z
 
     const fabricMat = new THREE.MeshStandardMaterial({
       color: new THREE.Color(baseColor),
@@ -263,6 +263,22 @@ export const render3DMockupToDataUrl = async (params: Render3DMockupParams): Pro
     });
     disposables.push(collarMat);
 
+    const leftSleeveMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(surfaces.left?.color || baseColor),
+      roughness: 0.65,
+      metalness: 0.05,
+      side: THREE.DoubleSide,
+    });
+    disposables.push(leftSleeveMat);
+
+    const rightSleeveMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(surfaces.right?.color || baseColor),
+      roughness: 0.65,
+      metalness: 0.05,
+      side: THREE.DoubleSide,
+    });
+    disposables.push(rightSleeveMat);
+
     // Apply materials across meshes
     jerseyGroup.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
@@ -273,7 +289,11 @@ export const render3DMockupToDataUrl = async (params: Render3DMockupParams): Pro
           ? mesh.material[0]?.name || ''
           : mesh.material?.name || '';
 
-        if (matName.includes('BISBAN')) {
+        if (mesh.name === 'Cloth_mesh_3') {
+          mesh.material = leftSleeveMat;
+        } else if (mesh.name === 'Cloth_mesh') {
+          mesh.material = rightSleeveMat;
+        } else if (mesh.name.includes('Cloth_mesh_6') || matName.includes('BISBAN')) {
           mesh.material = collarMat;
         } else {
           mesh.material = fabricMat;

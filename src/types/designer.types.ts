@@ -1,3 +1,10 @@
+import type {
+  JerseyTemplateId,
+  JerseyColors,
+  StripeElementConfig,
+  SleevePatternConfig,
+} from '@/features/jersey-editor/types/jersey-template.types';
+
 export type GarmentType = 'tshirt' | 'jersey';
 
 export type TShirtSurface = 'front' | 'back';
@@ -70,6 +77,13 @@ export interface DesignerState {
   jerseySurfaces: Record<string, SurfaceDesign>;
   surfaces: Record<string, SurfaceDesign>;
 
+  // Jersey Template & Advanced Customization state
+  jerseyTemplateId: JerseyTemplateId | null;
+  jerseyColors: JerseyColors;
+  jerseyStripes: StripeElementConfig[];
+  leftSleevePattern: SleevePatternConfig;
+  rightSleevePattern: SleevePatternConfig;
+
   // History
   history: {
     past: Array<Record<string, SurfaceDesign>>;
@@ -92,6 +106,16 @@ export interface DesignerState {
   resetAll: () => void;
   startNewProject: (garmentType?: GarmentType) => void;
 
+  // Jersey Template Actions
+  setJerseyTemplate: (templateId: JerseyTemplateId) => void;
+  setJerseyColors: (colors: Partial<JerseyColors>) => void;
+  setJerseyStripes: (stripes: StripeElementConfig[]) => void;
+  addJerseyStripe: (stripe: StripeElementConfig) => void;
+  updateJerseyStripe: (id: string, updates: Partial<StripeElementConfig>) => void;
+  removeJerseyStripe: (id: string) => void;
+  setLeftSleevePattern: (config: Partial<SleevePatternConfig>) => void;
+  setRightSleevePattern: (config: Partial<SleevePatternConfig>) => void;
+
   // Project persistence actions
   setCurrentProject: (id: string | null, name: string) => void;
   loadProjectData: (
@@ -99,7 +123,14 @@ export interface DesignerState {
     baseColor: string,
     surfaces: Record<string, SurfaceDesign>,
     projectId?: string,
-    projectName?: string
+    projectName?: string,
+    templateData?: {
+      jerseyTemplateId?: JerseyTemplateId | null;
+      jerseyColors?: JerseyColors;
+      jerseyStripes?: StripeElementConfig[];
+      leftSleevePattern?: SleevePatternConfig;
+      rightSleevePattern?: SleevePatternConfig;
+    }
   ) => void;
   setIsSaving: (isSaving: boolean) => void;
   markSaved: (timestamp?: string) => void;

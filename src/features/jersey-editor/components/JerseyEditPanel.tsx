@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useUIStore } from '@/stores/ui.store';
 import { useDesignerStore } from '@/stores/designer.store';
-import { ColorEditor } from '@/features/color-editor/components/ColorEditor';
 import { ArtworkCanvas } from '@/features/texture-engine/components/ArtworkCanvas';
 import { useArtworkCanvas } from '@/features/texture-engine/hooks/useArtworkCanvas';
 import { ArtworkUploader } from '@/features/image-editor/components/ArtworkUploader';
@@ -9,12 +7,36 @@ import { TextEditor, type TextOptions } from '@/features/text-editor/components/
 import { ImageProperties } from '@/features/image-editor/components/ImageProperties';
 import { LayerManager } from '@/features/image-editor/components/LayerManager';
 import { JerseyPanelSelector } from './JerseyPanelSelector';
-import { Undo2, Redo2, RotateCcw, Sparkles, Layers, Type, Palette, Upload, Hash, User } from 'lucide-react';
+import { JerseyTemplatePicker } from './JerseyTemplatePicker';
+import { JerseyColorCustomizer } from './JerseyColorCustomizer';
+import { JerseyStripeBuilder } from './JerseyStripeBuilder';
+import { JerseySleeveCustomizer } from './JerseySleeveCustomizer';
+import { JerseyTextCustomizer } from './JerseyTextCustomizer';
+import {
+  Undo2,
+  Redo2,
+  RotateCcw,
+  Sparkles,
+  Palette,
+  Rows3,
+  Shirt,
+  Type,
+  Upload,
+  Layers,
+} from 'lucide-react';
 import type { FabricObject } from 'fabric';
 
+export type JerseyCustomizerTab =
+  | 'templates'
+  | 'colors'
+  | 'stripes'
+  | 'sleeves'
+  | 'text'
+  | 'artwork'
+  | 'layers';
+
 export const JerseyEditPanel: React.FC = () => {
-  const activeTab = useUIStore((state) => state.activeTab);
-  const setActiveTab = useUIStore((state) => state.setActiveTab);
+  const [activeTab, setActiveTab] = useState<JerseyCustomizerTab>('templates');
   const selectedSurface = useDesignerStore((state) => state.selectedSurface);
   const resetSurface = useDesignerStore((state) => state.resetSurface);
 
@@ -83,14 +105,27 @@ export const JerseyEditPanel: React.FC = () => {
   const isSelectedImage =
     selectedFabricObject?.type === 'fabricimage' || selectedFabricObject?.type === 'image';
 
+  const tabs: { id: JerseyCustomizerTab; label: string; icon: React.FC<{ className?: string }> }[] = [
+    { id: 'templates', label: 'Templates', icon: Sparkles },
+    { id: 'colors', label: 'Colors', icon: Palette },
+    { id: 'stripes', label: 'Stripes', icon: Rows3 },
+    { id: 'sleeves', label: 'Sleeves', icon: Shirt },
+    { id: 'text', label: 'Text', icon: Type },
+    { id: 'artwork', label: 'Artwork', icon: Upload },
+    { id: 'layers', label: 'Layers', icon: Layers },
+  ];
+
   return (
     <aside className="w-full md:w-80 lg:w-96 bg-white dark:bg-slate-900 border-l border-neutral-200/80 dark:border-slate-800 flex flex-col h-full overflow-y-auto shrink-0 select-none transition-colors duration-200">
       {/* 6-Panel Surface Selector Bar */}
-      <div className="p-4 border-b border-neutral-100 dark:border-slate-800/80 bg-neutral-50/70 dark:bg-slate-900/60 space-y-3">
+      <div className="p-3.5 border-b border-neutral-100 dark:border-slate-800/80 bg-neutral-50/70 dark:bg-slate-900/60 space-y-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">
+            <span className="text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
               Jersey Studio
+            </span>
+            <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+              V-Neck 3D
             </span>
           </div>
 
@@ -138,13 +173,13 @@ export const JerseyEditPanel: React.FC = () => {
       </div>
 
       {/* 2D Interactive Composition Canvas */}
-      <div className="p-4 border-b border-neutral-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+      <div className="p-3.5 border-b border-neutral-100 dark:border-slate-800 bg-white dark:bg-slate-900">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-            {selectedSurface.toUpperCase()} Panel Canvas
+          <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 capitalize">
+            {selectedSurface} Canvas (2D)
           </span>
           <span className="text-[10px] text-neutral-400 dark:text-neutral-500">
-            Drag, scale, or rotate handles
+            Interactive Drag & Scale
           </span>
         </div>
         <ArtworkCanvas
@@ -153,128 +188,58 @@ export const JerseyEditPanel: React.FC = () => {
         />
       </div>
 
-      {/* Quick Tool Navigation (Mobile / Small Screens) */}
-      <div className="flex md:hidden border-b border-neutral-100 dark:border-slate-800 bg-neutral-50/50 dark:bg-slate-900 p-1">
-        <button
-          type="button"
-          onClick={() => setActiveTab('color')}
-          className={`flex-1 py-1.5 text-xs font-medium rounded-lg flex items-center justify-center gap-1 ${
-            activeTab === 'color'
-              ? 'bg-white dark:bg-slate-800 shadow-2xs text-blue-600 dark:text-blue-400'
-              : 'text-neutral-600 dark:text-neutral-400'
-          }`}
-        >
-          <Palette className="w-3.5 h-3.5" />
-          Color
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('upload')}
-          className={`flex-1 py-1.5 text-xs font-medium rounded-lg flex items-center justify-center gap-1 ${
-            activeTab === 'upload'
-              ? 'bg-white dark:bg-slate-800 shadow-2xs text-blue-600 dark:text-blue-400'
-              : 'text-neutral-600 dark:text-neutral-400'
-          }`}
-        >
-          <Upload className="w-3.5 h-3.5" />
-          Artwork
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('text')}
-          className={`flex-1 py-1.5 text-xs font-medium rounded-lg flex items-center justify-center gap-1 ${
-            activeTab === 'text'
-              ? 'bg-white dark:bg-slate-800 shadow-2xs text-blue-600 dark:text-blue-400'
-              : 'text-neutral-600 dark:text-neutral-400'
-          }`}
-        >
-          <Type className="w-3.5 h-3.5" />
-          Text
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('layers')}
-          className={`flex-1 py-1.5 text-xs font-medium rounded-lg flex items-center justify-center gap-1 ${
-            activeTab === 'layers'
-              ? 'bg-white dark:bg-slate-800 shadow-2xs text-blue-600 dark:text-blue-400'
-              : 'text-neutral-600 dark:text-neutral-400'
-          }`}
-        >
-          <Layers className="w-3.5 h-3.5" />
-          Layers
-        </button>
+      {/* Studio Category Navigation Tabs */}
+      <div className="flex overflow-x-auto border-b border-neutral-100 dark:border-slate-800 bg-neutral-50/50 dark:bg-slate-900/60 p-1.5 gap-1 shrink-0 no-scrollbar">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 min-w-[58px] py-1.5 px-2 rounded-lg text-[11px] font-semibold flex flex-col items-center justify-center gap-1 transition-all ${
+                isActive
+                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-2xs'
+                  : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 hover:bg-neutral-100/60 dark:hover:bg-slate-800/50'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              <span className="tracking-tight text-[10px]">{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Tab Specific Content */}
-      <div className="p-5 flex-1 space-y-6">
-        {activeTab === 'color' && <ColorEditor />}
+      {/* Active Tab Panel Content */}
+      <div className="p-4 flex-1 space-y-5">
+        {activeTab === 'templates' && <JerseyTemplatePicker />}
 
-        {activeTab === 'upload' && (
-          <div className="space-y-5">
-            {isSelectedImage ? (
-              <ImageProperties
-                selectedObject={selectedFabricObject}
-                onUpdate={updateSelectedObject}
-                onDelete={deleteSelected}
-                onDuplicate={duplicateSelected}
-                onCenter={centerSelected}
-              />
-            ) : null}
+        {activeTab === 'colors' && <JerseyColorCustomizer />}
 
-            <div>
-              <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 block mb-2">
-                Upload Panel Artwork (Sponsor / Club Crest)
-              </span>
-              <ArtworkUploader onImageSelected={(dataUrl) => addImage(dataUrl)} />
-            </div>
-          </div>
-        )}
+        {activeTab === 'stripes' && <JerseyStripeBuilder />}
+
+        {activeTab === 'sleeves' && <JerseySleeveCustomizer />}
 
         {activeTab === 'text' && (
           <div className="space-y-4">
-            {/* Jersey Quick Typography Presets */}
-            {!isSelectedText && (
-              <div className="grid grid-cols-2 gap-2 mb-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    addText({
-                      content: 'PLAYER',
-                      fontFamily: 'Oswald, sans-serif',
-                      fontSize: 64,
-                      fontWeight: 'bold',
-                      color: '#171717',
-                      textAlign: 'center',
-                    })
-                  }
-                  className="p-2.5 bg-neutral-100 dark:bg-slate-800 hover:bg-neutral-200 dark:hover:bg-slate-700 text-neutral-800 dark:text-neutral-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border border-neutral-200 dark:border-slate-700"
-                >
-                  <User className="w-3.5 h-3.5 text-blue-600" />
-                  <span>+ Player Name</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    addText({
-                      content: '10',
-                      fontFamily: 'Oswald, sans-serif',
-                      fontSize: 110,
-                      fontWeight: 'bold',
-                      color: '#171717',
-                      textAlign: 'center',
-                    })
-                  }
-                  className="p-2.5 bg-neutral-100 dark:bg-slate-800 hover:bg-neutral-200 dark:hover:bg-slate-700 text-neutral-800 dark:text-neutral-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 border border-neutral-200 dark:border-slate-700"
-                >
-                  <Hash className="w-3.5 h-3.5 text-blue-600" />
-                  <span>+ Squad Number</span>
-                </button>
-              </div>
-            )}
+            <JerseyTextCustomizer
+              onAddTextToActiveSurface={(opts) =>
+                addText({
+                  content: opts.content,
+                  fontFamily: opts.fontFamily,
+                  fontSize: opts.fontSize,
+                  fontWeight: 'bold',
+                  color: opts.color,
+                  textAlign: 'center',
+                })
+              }
+            />
 
             <div>
               <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 block mb-2">
-                {isSelectedText ? 'Edit Selected Text' : 'Custom Lettering'}
+                {isSelectedText ? 'Edit Selected Text Box' : 'New Custom Text Layer'}
               </span>
               <TextEditor
                 isEditingSelected={isSelectedText}
@@ -307,6 +272,27 @@ export const JerseyEditPanel: React.FC = () => {
           </div>
         )}
 
+        {activeTab === 'artwork' && (
+          <div className="space-y-4">
+            {isSelectedImage ? (
+              <ImageProperties
+                selectedObject={selectedFabricObject}
+                onUpdate={updateSelectedObject}
+                onDelete={deleteSelected}
+                onDuplicate={duplicateSelected}
+                onCenter={centerSelected}
+              />
+            ) : null}
+
+            <div>
+              <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 block mb-2">
+                Upload Club Crest / Sponsor Badge
+              </span>
+              <ArtworkUploader onImageSelected={(dataUrl) => addImage(dataUrl)} />
+            </div>
+          </div>
+        )}
+
         {activeTab === 'layers' && (
           <LayerManager canvas={canvasInstance} onLayerChange={updateTexture} />
         )}
@@ -316,9 +302,9 @@ export const JerseyEditPanel: React.FC = () => {
       <div className="p-3 border-t border-neutral-100 dark:border-slate-800 bg-neutral-50/60 dark:bg-slate-900/60 text-[11px] text-neutral-500 dark:text-neutral-400 flex items-center justify-between">
         <span className="flex items-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-          <span>Jersey 6-Panel Engine</span>
+          <span>Jersey Template Engine</span>
         </span>
-        <span className="font-mono text-neutral-400 dark:text-neutral-500">Phase 4 Ready</span>
+        <span className="font-mono text-neutral-400 dark:text-neutral-500">Phase 8 Ready</span>
       </div>
     </aside>
   );

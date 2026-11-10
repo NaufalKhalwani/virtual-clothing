@@ -17,14 +17,14 @@ const JERSEY_DECAL_SPECS: Record<
   }
 > = {
   front: {
-    targetMesh: 'Cloth_mesh_12',
-    position: [0, 1.35, -0.14],
+    targetMesh: 'Cloth_mesh_18',
+    position: [0, 1.35, 0.12],
     rotation: [0, 0, 0],
     scale: [0.26, 0.32, 0.2],
   },
   back: {
-    targetMesh: 'Cloth_mesh_18',
-    position: [0, 1.35, 0.12],
+    targetMesh: 'Cloth_mesh_12',
+    position: [0, 1.35, -0.14],
     rotation: [0, Math.PI, 0],
     scale: [0.26, 0.32, 0.2],
   },
@@ -277,11 +277,18 @@ export const bakeUVTextureToDataUrl = async (params: BakeUVParams): Promise<stri
         }
       }
 
+      const meshBaseColor =
+        mesh.name === 'Cloth_mesh_3'
+          ? new THREE.Color(surfaces.left?.color || baseColor)
+          : mesh.name === 'Cloth_mesh'
+            ? new THREE.Color(surfaces.right?.color || baseColor)
+            : baseColorObj;
+
       const shaderMat = new THREE.ShaderMaterial({
         vertexShader: uvBakeVertexShader,
         fragmentShader: uvBakeFragmentShader,
         uniforms: {
-          uBaseColor: { value: baseColorObj },
+          uBaseColor: { value: meshBaseColor },
           uDecalTexture: { value: decalTex },
           uHasDecal: { value: decalTex !== null },
           uDecalInvMatrix: { value: decalInv },

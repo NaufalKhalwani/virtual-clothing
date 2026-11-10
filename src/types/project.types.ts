@@ -1,4 +1,10 @@
 import type { GarmentType, DesignElement } from './designer.types';
+import type {
+  JerseyTemplateId,
+  JerseyColors,
+  StripeElementConfig,
+  SleevePatternConfig,
+} from '@/features/jersey-editor/types/jersey-template.types';
 
 export interface SurfaceDesignData {
   color: string;
@@ -13,6 +19,12 @@ export interface ProjectDesignData {
   baseColor: string;
   selectedSurface: string;
   surfaces: Record<string, SurfaceDesignData>;
+  // Phase 8 Jersey Template & Customization
+  jerseyTemplateId?: JerseyTemplateId | null;
+  jerseyColors?: JerseyColors;
+  jerseyStripes?: StripeElementConfig[];
+  leftSleevePattern?: SleevePatternConfig;
+  rightSleevePattern?: SleevePatternConfig;
 }
 
 export interface Project {
