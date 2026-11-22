@@ -52,10 +52,15 @@ export const ArtworkCanvas: React.FC<ArtworkCanvasProps> = ({
     lastLoadedJsonRef.current = json;
 
     if (garmentType === 'jersey') {
+      const currentColors = useDesignerStore.getState().jerseyColors;
+      const baseCol = currentColors?.primary || useDesignerStore.getState().baseColor;
       const compositedUrl = await compositeFabricArtworkWithPattern(
         rawDataUrl,
         jerseyStripes,
-        selectedSurface
+        selectedSurface,
+        CANVAS_SIZE.width,
+        CANVAS_SIZE.height,
+        baseCol
       );
       setSurfaceTexture(selectedSurface, compositedUrl || rawDataUrl, json);
 
@@ -78,13 +83,23 @@ export const ArtworkCanvas: React.FC<ArtworkCanvasProps> = ({
     const fabricCanvas = createFabricCanvas(canvasElRef.current, CANVAS_SIZE);
     fabricRef.current = fabricCanvas;
 
+    let rafId: number | null = null;
     const handleTransformationEnd = () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
       pushHistory();
       syncTexture();
     };
 
+    // Throttle live transform sync via requestAnimationFrame to avoid blocking the main thread
     const handleActiveMoving = () => {
-      syncTexture();
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        syncTexture();
+        rafId = null;
+      });
     };
 
     const handleSelection = (e: { selected?: FabricObject[] }) => {
@@ -124,6 +139,9 @@ export const ArtworkCanvas: React.FC<ArtworkCanvasProps> = ({
     }
 
     return () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
       fabricCanvas.dispose();
       fabricRef.current = null;
     };

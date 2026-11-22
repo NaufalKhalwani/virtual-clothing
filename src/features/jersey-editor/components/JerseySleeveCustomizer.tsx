@@ -8,9 +8,15 @@ const SLEEVE_PATTERN_TYPES: { id: SleevePatternType; name: string; desc: string 
   { id: 'horizontal-stripes', name: 'Horizontal Bands', desc: 'Classic athletic hoop bands' },
   { id: 'vertical-stripes', name: 'Vertical Stripes', desc: 'Lengthening parallel stripes' },
   { id: 'diagonal-stripes', name: 'Diagonal Stripes', desc: 'Dynamic speed stripes' },
+  { id: 'speed-bars', name: 'Speed 3-Bars', desc: 'Iconic shoulder-to-arm athletic bars' },
+  { id: 'chevrons', name: 'Speed Chevrons', desc: 'Downward dynamic speed chevrons' },
   { id: 'geometric', name: 'Geometric Facets', desc: 'Modern tournament diamond tessellation' },
   { id: 'gradient', name: 'Linear Gradient', desc: 'Smooth ombre color transition' },
   { id: 'cuff-accent', name: 'Cuff Band & Pinstripe', desc: 'Professional rib cuff accent' },
+  { id: 'retro-geometric', name: 'Retro 90s Chevrons', desc: 'Angular geometric sleeve chevrons' },
+  { id: 'tonal-jacquard', name: 'Tonal Jacquard', desc: 'Subtle micro-weave texture overlay' },
+  { id: 'multi-width-stripes', name: 'Multi-Width Stripes', desc: 'Rhythmic multi-gauge vertical stripes' },
+  { id: 'colorblock', name: 'Color Block Shoulder', desc: 'Asymmetric top-arm panel with contrast piping' },
 ];
 
 export const JerseySleeveCustomizer: React.FC = () => {

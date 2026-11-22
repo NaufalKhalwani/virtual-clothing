@@ -4,14 +4,24 @@ export interface ModelAssetValidationResult {
   reason: string;
 }
 
+// In-memory cache for validated model assets to avoid redundant network roundtrips
+const validationCache = new Map<string, ModelAssetValidationResult>();
+
 /**
  * Validates whether a 3D GLB/GLTF model asset exists and is a valid binary asset,
  * preventing SPA fallback HTML pages from being parsed by Three.js GLTFLoader.
+ * Results are cached in memory for sub-millisecond subsequent lookups.
  */
 export async function validateModelAsset(
   url: string,
   timeoutMs = 5000
 ): Promise<ModelAssetValidationResult> {
+  // Check memory cache first
+  const cached = validationCache.get(url);
+  if (cached && cached.valid) {
+    return cached;
+  }
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -87,11 +97,15 @@ export async function validateModelAsset(
       };
     }
 
-    return {
+    const successResult: ModelAssetValidationResult = {
       valid: true,
       status: 'available',
       reason: 'Valid 3D model asset verified',
     };
+
+    // Cache valid result
+    validationCache.set(url, successResult);
+    return successResult;
   } catch (err: unknown) {
     clearTimeout(timeoutId);
     const errorMsg = err instanceof Error ? err.message : String(err);

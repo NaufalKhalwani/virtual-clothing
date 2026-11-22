@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useDesignerStore } from '@/stores/designer.store';
 import { JERSEY_TEMPLATES } from '../constants/jersey-templates.constants';
 import type { JerseyTemplateCategory, JerseyTemplateId } from '../types/jersey-template.types';
@@ -11,13 +12,16 @@ import {
 } from 'lucide-react';
 
 export const JerseyTemplatePicker: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const initialCategory = (searchParams.get('category') as JerseyTemplateCategory) || 'all';
   const jerseyTemplateId = useDesignerStore((state) => state.jerseyTemplateId);
   const setJerseyTemplate = useDesignerStore((state) => state.setJerseyTemplate);
   const isDirty = useDesignerStore((state) => state.isDirty);
 
-  const [activeCategory, setActiveCategory] = useState<JerseyTemplateCategory | 'all'>('all');
+  const [activeCategory, setActiveCategory] = useState<JerseyTemplateCategory | 'all'>(initialCategory);
   const [searchQuery, setSearchQuery] = useState('');
-  const [previewSide, setPreviewSide] = useState<'front' | 'back'>('front');
+  const initialSide = searchParams.get('side') === 'back' ? 'back' : 'front';
+  const [previewSide, setPreviewSide] = useState<'front' | 'back'>(initialSide);
   const [confirmTemplateId, setConfirmTemplateId] = useState<JerseyTemplateId | null>(null);
 
   const categories: { id: JerseyTemplateCategory | 'all'; label: string }[] = [
@@ -26,6 +30,8 @@ export const JerseyTemplatePicker: React.FC = () => {
     { id: 'modern', label: 'Modern' },
     { id: 'athletic', label: 'Athletic' },
     { id: 'elite', label: 'Elite' },
+    { id: 'vintage', label: 'Vintage' },
+    { id: 'club-inspired', label: 'European Clubs' },
   ];
 
   // Filter templates by category and search term

@@ -19,16 +19,25 @@ export const CameraRig: React.FC = () => {
   useEffect(() => {
     const preset = CAMERA_PRESETS[activeCameraPreset];
     targetPosition.current.set(...preset.position);
-    isTransitioning.current = true;
+    if (controlsRef.current) {
+      controlsRef.current.object.position.set(...preset.position);
+      controlsRef.current.target.set(0, 0, 0);
+      controlsRef.current.update();
+    }
+    isTransitioning.current = false;
   }, [activeCameraPreset]);
 
   useFrame(({ camera }) => {
     if (isTransitioning.current && controlsRef.current) {
-      camera.position.lerp(targetPosition.current, 0.08);
-      controlsRef.current.target.lerp(new THREE.Vector3(0, 0, 0), 0.08);
+      // Prevent passing directly through (0, 0, 0) which causes OrbitControls NaN singularity
+      if (Math.abs(camera.position.z) < 0.5 && Math.abs(camera.position.x) < 0.4) {
+        camera.position.x = 1.8;
+      }
+      camera.position.lerp(targetPosition.current, 0.12);
+      controlsRef.current.target.set(0, 0, 0);
       controlsRef.current.update();
 
-      if (camera.position.distanceTo(targetPosition.current) < 0.01) {
+      if (camera.position.distanceTo(targetPosition.current) < 0.05) {
         camera.position.copy(targetPosition.current);
         controlsRef.current.target.set(0, 0, 0);
         controlsRef.current.update();

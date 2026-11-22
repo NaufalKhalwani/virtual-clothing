@@ -26,4 +26,22 @@ dist-ssr
 
 # Environment
 .env
-.env.production
+.env.*
+!.env.example
+
+# QA, Docs & Testing artifacts
+qa-screenshots/
+coverage/
+playwright-report/
+test-results/
+phase*.md
+acuan.md
+supabase-integration-authentication.md
+
+# OS & Temp
+Thumbs.db
+*.tmp
+*.temp
+*.bak
+.cache/
+.vite/

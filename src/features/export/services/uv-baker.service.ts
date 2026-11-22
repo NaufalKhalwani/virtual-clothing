@@ -6,7 +6,7 @@ import { sanitizeFileName, downloadDataUrl } from '../utils/download.utils';
 import { TSHIRT_MODEL_PATH } from '@/features/viewer-3d/components/TShirtModel';
 import { JERSEY_MODEL_PATH } from '@/features/jersey-editor/components/JerseyModel';
 
-// Calibrated Jersey Decal coordinate specs
+// Calibrated Jersey Decal coordinate specs matching JerseyModel.tsx
 const JERSEY_DECAL_SPECS: Record<
   JerseyPanel,
   {
@@ -18,39 +18,39 @@ const JERSEY_DECAL_SPECS: Record<
 > = {
   front: {
     targetMesh: 'Cloth_mesh_18',
-    position: [0, 1.35, 0.12],
+    position: [0.0, 1.28, 0.05],
     rotation: [0, 0, 0],
-    scale: [0.26, 0.32, 0.2],
+    scale: [0.44, 0.68, 0.24],
   },
   back: {
     targetMesh: 'Cloth_mesh_12',
-    position: [0, 1.35, -0.14],
+    position: [0.0, 1.28, -0.06],
     rotation: [0, Math.PI, 0],
-    scale: [0.26, 0.32, 0.2],
+    scale: [0.44, 0.68, 0.24],
   },
   left: {
     targetMesh: 'Cloth_mesh_3',
-    position: [-0.22, 1.44, -0.04],
+    position: [-0.20, 1.43, -0.04],
     rotation: [0, -Math.PI / 2, 0],
-    scale: [0.16, 0.18, 0.16],
+    scale: [0.18, 0.24, 0.20],
   },
   right: {
     targetMesh: 'Cloth_mesh',
-    position: [0.22, 1.44, -0.04],
+    position: [0.20, 1.43, -0.04],
     rotation: [0, Math.PI / 2, 0],
-    scale: [0.16, 0.18, 0.16],
+    scale: [0.18, 0.24, 0.20],
   },
   leftShoulder: {
     targetMesh: 'Cloth_mesh_27',
-    position: [-0.08, 1.58, -0.02],
+    position: [-0.045, 1.58, 0.0],
     rotation: [-Math.PI / 6, -Math.PI / 4, 0],
-    scale: [0.12, 0.14, 0.12],
+    scale: [0.10, 0.10, 0.10],
   },
   rightShoulder: {
     targetMesh: 'Cloth_mesh_24',
-    position: [0.08, 1.58, -0.02],
+    position: [0.045, 1.58, 0.0],
     rotation: [-Math.PI / 6, Math.PI / 4, 0],
-    scale: [0.12, 0.14, 0.12],
+    scale: [0.10, 0.10, 0.10],
   },
 };
 

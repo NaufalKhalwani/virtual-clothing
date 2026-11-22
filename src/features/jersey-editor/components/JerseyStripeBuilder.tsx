@@ -10,6 +10,10 @@ import {
   Zap,
   Maximize,
   Sparkles,
+  ChevronsDown,
+  Split,
+  Grid,
+  Layers,
 } from 'lucide-react';
 
 const PATTERN_PRESETS: { id: StripeOrientation; label: string; icon: React.FC<{ className?: string }> }[] = [
@@ -17,8 +21,14 @@ const PATTERN_PRESETS: { id: StripeOrientation; label: string; icon: React.FC<{ 
   { id: 'vertical', label: 'Vertical', icon: Columns3 },
   { id: 'sash', label: 'Sash', icon: Zap },
   { id: 'panel', label: 'Chest Block', icon: Maximize },
+  { id: 'side-panel', label: 'Flank Panels', icon: Split },
+  { id: 'chevron', label: 'Chevrons', icon: ChevronsDown },
   { id: 'gradient', label: 'Gradient', icon: Sparkles },
   { id: 'geometric', label: 'Geometric', icon: Sliders },
+  { id: 'retro-geometric', label: 'Retro 90s', icon: Sliders },
+  { id: 'tonal-jacquard', label: 'Jacquard', icon: Grid },
+  { id: 'multi-width-stripes', label: 'Multi-Width', icon: Columns3 },
+  { id: 'colorblock', label: 'Colorblock', icon: Layers },
 ];
 
 export const JerseyStripeBuilder: React.FC = () => {
@@ -35,18 +45,51 @@ export const JerseyStripeBuilder: React.FC = () => {
   const activeStripe = jerseyStripes.find((s) => s.id === selectedStripeId) || jerseyStripes[0];
 
   const handleCreateStripe = (orientation: StripeOrientation) => {
+    const defaultCount =
+      orientation === 'vertical' || orientation === 'multi-width-stripes'
+        ? 5
+        : orientation === 'horizontal'
+        ? 4
+        : orientation === 'chevron' || orientation === 'retro-geometric'
+        ? 3
+        : 1;
+
+    const defaultThickness =
+      orientation === 'sash'
+        ? 140
+        : orientation === 'panel' || orientation === 'retro-geometric'
+        ? 180
+        : orientation === 'colorblock'
+        ? 160
+        : orientation === 'side-panel'
+        ? 120
+        : orientation === 'multi-width-stripes'
+        ? 70
+        : orientation === 'chevron'
+        ? 50
+        : orientation === 'tonal-jacquard'
+        ? 42
+        : 54;
+
+    const defaultSpacing =
+      orientation === 'chevron'
+        ? 90
+        : orientation === 'multi-width-stripes'
+        ? 36
+        : 64;
+
     const newStripe: StripeElementConfig = {
       id: `stripe_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
       orientation,
       surface: 'both',
-      count: orientation === 'vertical' ? 5 : orientation === 'horizontal' ? 4 : 1,
-      thickness: orientation === 'sash' ? 140 : orientation === 'panel' ? 180 : 54,
-      spacing: 64,
+      count: defaultCount,
+      thickness: defaultThickness,
+      spacing: defaultSpacing,
       positionY: 512,
       positionX: 512,
       color: jerseyColors.stripe || '#FFFFFF',
       secondaryColor: jerseyColors.secondary || '#18181B',
-      opacity: 1,
+      opacity: orientation === 'tonal-jacquard' ? 0.35 : 1,
       protectText: true,
       angle: orientation === 'sash' ? -45 : 0,
     };

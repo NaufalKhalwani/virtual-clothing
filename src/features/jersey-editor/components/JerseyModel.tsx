@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useGLTF, Center, Decal } from '@react-three/drei';
 import * as THREE from 'three';
 import type { GLTF } from 'three-stdlib';
@@ -14,6 +14,7 @@ type GLTFResult = GLTF & {
 };
 
 // Panel configuration with target mesh IDs and calibrated 3D Decal coordinates
+// Calibrated to span the full cloth geometry from shoulders to hem and flank to flank
 const PANEL_DECAL_CONFIG: Record<
   JerseyPanel,
   {
@@ -23,47 +24,47 @@ const PANEL_DECAL_CONFIG: Record<
     scale: [number, number, number];
   }
 > = {
-  // Front Body (V-neck chest & stomach)
+  // Front Body (V-neck chest & stomach, spans full front torso)
   front: {
     targetMesh: 'Cloth_mesh_18',
-    position: [0, 1.35, 0.12],
+    position: [0.0, 1.28, 0.05],
     rotation: [0, 0, 0],
-    scale: [0.26, 0.32, 0.2],
+    scale: [0.44, 0.68, 0.24],
   },
-  // Back Body (Upper back, squad number, player name)
+  // Back Body (Upper back, squad number, player name, spans full back torso)
   back: {
     targetMesh: 'Cloth_mesh_12',
-    position: [0, 1.35, -0.14],
+    position: [0.0, 1.28, -0.06],
     rotation: [0, Math.PI, 0],
-    scale: [0.26, 0.32, 0.2],
+    scale: [0.44, 0.68, 0.24],
   },
   // Left Sleeve
   left: {
     targetMesh: 'Cloth_mesh_3',
-    position: [-0.22, 1.44, -0.04],
+    position: [-0.20, 1.43, -0.04],
     rotation: [0, -Math.PI / 2, 0],
-    scale: [0.16, 0.18, 0.16],
+    scale: [0.18, 0.24, 0.20],
   },
   // Right Sleeve
   right: {
     targetMesh: 'Cloth_mesh',
-    position: [0.22, 1.44, -0.04],
+    position: [0.20, 1.43, -0.04],
     rotation: [0, Math.PI / 2, 0],
-    scale: [0.16, 0.18, 0.16],
+    scale: [0.18, 0.24, 0.20],
   },
   // Left Shoulder (Raglan shoulder seam)
   leftShoulder: {
     targetMesh: 'Cloth_mesh_27',
-    position: [-0.08, 1.58, -0.02],
+    position: [-0.045, 1.58, 0.0],
     rotation: [-Math.PI / 6, -Math.PI / 4, 0],
-    scale: [0.12, 0.14, 0.12],
+    scale: [0.10, 0.10, 0.10],
   },
   // Right Shoulder (Raglan shoulder seam)
   rightShoulder: {
     targetMesh: 'Cloth_mesh_24',
-    position: [0.08, 1.58, -0.02],
+    position: [0.045, 1.58, 0.0],
     rotation: [-Math.PI / 6, Math.PI / 4, 0],
-    scale: [0.12, 0.14, 0.12],
+    scale: [0.10, 0.10, 0.10],
   },
 };
 
@@ -86,45 +87,111 @@ export const JerseyModel: React.FC = () => {
     rightShoulder: null,
   });
 
+  // Procedural Athletic Sportswear Fabric Normal Map (Micro Pique Knit)
+  const athleticFabricBumpTexture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    ctx.fillStyle = '#8080FF';
+    ctx.fillRect(0, 0, 128, 128);
+
+    // Micro-knit athletic weave
+    for (let y = 0; y < 128; y += 4) {
+      for (let x = 0; x < 128; x += 4) {
+        const shift = ((y / 4) % 2) * 2;
+        const px = (x + shift) % 128;
+        ctx.fillStyle = '#9C9CFF';
+        ctx.fillRect(px, y, 2, 2);
+        ctx.fillStyle = '#6464EE';
+        ctx.fillRect(px + 2, y + 2, 2, 2);
+      }
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(24, 24);
+    tex.needsUpdate = true;
+    return tex;
+  }, []);
+
   // Dedicated PBR Fabric material for Jersey Body
   const fabricMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
+    const mat = new THREE.MeshStandardMaterial({
       color: '#FFFFFF',
-      roughness: 0.65,
-      metalness: 0.05,
+      roughness: 0.72,
+      metalness: 0.04,
       side: THREE.DoubleSide,
     });
-  }, []);
+    if (athleticFabricBumpTexture) {
+      mat.normalMap = athleticFabricBumpTexture;
+      mat.normalScale = new THREE.Vector2(0.35, 0.35);
+    }
+    return mat;
+  }, [athleticFabricBumpTexture]);
 
   // Left Sleeve PBR material
   const sleeveLeftMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
+    const mat = new THREE.MeshStandardMaterial({
       color: '#FFFFFF',
-      roughness: 0.65,
-      metalness: 0.05,
+      roughness: 0.72,
+      metalness: 0.04,
       side: THREE.DoubleSide,
     });
-  }, []);
+    if (athleticFabricBumpTexture) {
+      mat.normalMap = athleticFabricBumpTexture;
+      mat.normalScale = new THREE.Vector2(0.35, 0.35);
+    }
+    return mat;
+  }, [athleticFabricBumpTexture]);
 
   // Right Sleeve PBR material
   const sleeveRightMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
+    const mat = new THREE.MeshStandardMaterial({
       color: '#FFFFFF',
-      roughness: 0.65,
-      metalness: 0.05,
+      roughness: 0.72,
+      metalness: 0.04,
       side: THREE.DoubleSide,
     });
-  }, []);
+    if (athleticFabricBumpTexture) {
+      mat.normalMap = athleticFabricBumpTexture;
+      mat.normalScale = new THREE.Vector2(0.35, 0.35);
+    }
+    return mat;
+  }, [athleticFabricBumpTexture]);
 
   // Dedicated PBR material for V-neck Collar & Rib Trims (Bisban)
   const collarMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
+    const mat = new THREE.MeshStandardMaterial({
       color: '#FFFFFF',
-      roughness: 0.7,
+      roughness: 0.68,
       metalness: 0.05,
       side: THREE.DoubleSide,
     });
-  }, []);
+    if (athleticFabricBumpTexture) {
+      mat.normalMap = athleticFabricBumpTexture;
+      mat.normalScale = new THREE.Vector2(0.4, 0.4);
+    }
+    return mat;
+  }, [athleticFabricBumpTexture]);
+
+  // Dedicated PBR material for Tournament Sleeve Cuffs
+  const cuffMaterial = useMemo(() => {
+    const mat = new THREE.MeshStandardMaterial({
+      color: '#FFFFFF',
+      roughness: 0.65,
+      metalness: 0.04,
+      side: THREE.DoubleSide,
+    });
+    if (athleticFabricBumpTexture) {
+      mat.normalMap = athleticFabricBumpTexture;
+      mat.normalScale = new THREE.Vector2(0.3, 0.3);
+    }
+    return mat;
+  }, [athleticFabricBumpTexture]);
 
   // Stitching & Trim material
   const trimMaterial = useMemo(() => {
@@ -154,6 +221,10 @@ export const JerseyModel: React.FC = () => {
     collarMaterial.wireframe = wireframe;
     collarMaterial.needsUpdate = true;
 
+    cuffMaterial.color.set(jerseyColors?.accent || '#FFFFFF');
+    cuffMaterial.wireframe = wireframe;
+    cuffMaterial.needsUpdate = true;
+
     trimMaterial.color.set(jerseyColors?.accent || '#E2E8F0');
     trimMaterial.wireframe = wireframe;
     trimMaterial.needsUpdate = true;
@@ -167,6 +238,7 @@ export const JerseyModel: React.FC = () => {
     sleeveLeftMaterial,
     sleeveRightMaterial,
     collarMaterial,
+    cuffMaterial,
     trimMaterial,
   ]);
 
@@ -204,6 +276,9 @@ export const JerseyModel: React.FC = () => {
     };
   }, [gltf]);
 
+  // Track previously loaded URLs to avoid redundant texture reloads on unaffected panels
+  const lastLoadedUrlsRef = useRef<Record<string, string | null>>({});
+
   // Synchronize 6 panel textures from Fabric.js 2D canvas Data URLs
   useEffect(() => {
     const surfaceKeys: JerseyPanel[] = [
@@ -217,7 +292,12 @@ export const JerseyModel: React.FC = () => {
     const loader = new THREE.TextureLoader();
 
     surfaceKeys.forEach((key) => {
-      const dataUrl = surfaces[key]?.textureDataUrl;
+      const dataUrl = surfaces[key]?.textureDataUrl ?? null;
+      if (lastLoadedUrlsRef.current[key] === dataUrl) {
+        return; // Skip if texture has not changed
+      }
+      lastLoadedUrlsRef.current[key] = dataUrl;
+
       if (!dataUrl) {
         setPanelTextures((prev) => {
           if (!prev[key]) return prev;
@@ -246,22 +326,30 @@ export const JerseyModel: React.FC = () => {
     });
   }, [surfaces]);
 
+  // Ref to hold current textures so unmount cleanup does not trigger on state updates
+  const panelTexturesRef = useRef(panelTextures);
+  panelTexturesRef.current = panelTextures;
+
   // Cleanup GPU materials & textures on unmount
   useEffect(() => {
     return () => {
+      athleticFabricBumpTexture?.dispose();
       fabricMaterial.dispose();
+      sleeveLeftMaterial.dispose();
+      sleeveRightMaterial.dispose();
       collarMaterial.dispose();
+      cuffMaterial.dispose();
       trimMaterial.dispose();
-      Object.values(panelTextures).forEach((tex) => tex?.dispose());
+      Object.values(panelTexturesRef.current).forEach((tex) => tex?.dispose());
     };
-  }, [fabricMaterial, collarMaterial, trimMaterial, panelTextures]);
+  }, [athleticFabricBumpTexture, fabricMaterial, sleeveLeftMaterial, sleeveRightMaterial, collarMaterial, cuffMaterial, trimMaterial]);
 
   if (!gltf || !gltf.scene) {
     return null;
   }
 
   return (
-    <Center top>
+    <Center>
       <group rotation={[0, 0, 0]} dispose={null}>
         {/* 1. Front Body Mesh with Front Decal */}
         {targetMeshes.front && (
@@ -389,11 +477,26 @@ export const JerseyModel: React.FC = () => {
           </mesh>
         )}
 
-        {/* 7. All other jersey elements (V-neck collar rib, hems, inner thickness, stitches) */}
+        {/* 7. All other jersey elements (V-neck collar rib, tournament cuffs, hems, stitches) */}
         {otherMeshes.map((mesh) => {
           const matName = Array.isArray(mesh.material) ? mesh.material[0]?.name : mesh.material?.name;
           const isCollar = mesh.name.includes('Cloth_mesh_6') || matName?.includes('BISBAN');
+          const isCuff =
+            mesh.name.includes('Cloth_mesh_30') ||
+            mesh.name.includes('Cloth_mesh_31') ||
+            mesh.name.includes('Cloth_mesh_32') ||
+            mesh.name.includes('Cloth_mesh_33') ||
+            mesh.name.includes('Cloth_mesh_34') ||
+            mesh.name.includes('Cloth_mesh_35');
           const isStitch = mesh.name.includes('BindedTrim');
+
+          const assignedMaterial = isCollar
+            ? collarMaterial
+            : isCuff
+            ? cuffMaterial
+            : isStitch
+            ? trimMaterial
+            : fabricMaterial;
 
           return (
             <mesh
@@ -401,7 +504,7 @@ export const JerseyModel: React.FC = () => {
               castShadow
               receiveShadow
               geometry={mesh.geometry}
-              material={isCollar ? collarMaterial : isStitch ? trimMaterial : fabricMaterial}
+              material={assignedMaterial}
             />
           );
         })}
@@ -409,3 +512,6 @@ export const JerseyModel: React.FC = () => {
     </Center>
   );
 };
+
+// Warm up 3D model in GPU cache
+useGLTF.preload(JERSEY_MODEL_PATH);

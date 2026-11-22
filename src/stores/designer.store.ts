@@ -402,8 +402,8 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       (el) => el.type === 'text'
     ) as DesignText[];
 
-    const frontTex = renderCompositeTexture(frontTexts, updatedStripes, 'front');
-    const backTex = renderCompositeTexture(backTexts, updatedStripes, 'back');
+    const frontTex = renderCompositeTexture(frontTexts, updatedStripes, 'front', 1024, 1024, updatedColors.primary);
+    const backTex = renderCompositeTexture(backTexts, updatedStripes, 'back', 1024, 1024, updatedColors.primary);
 
     const updatedSurfaces: Record<string, SurfaceDesign> = {
       ...state.surfaces,
@@ -459,8 +459,8 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
       (el) => el.type === 'text'
     ) as DesignText[];
 
-    const frontTex = renderCompositeTexture(frontTexts, stripes, 'front');
-    const backTex = renderCompositeTexture(backTexts, stripes, 'back');
+    const frontTex = renderCompositeTexture(frontTexts, stripes, 'front', 1024, 1024, state.jerseyColors?.primary || state.baseColor);
+    const backTex = renderCompositeTexture(backTexts, stripes, 'back', 1024, 1024, state.jerseyColors?.primary || state.baseColor);
 
     const updatedSurfaces: Record<string, SurfaceDesign> = {
       ...state.surfaces,
@@ -709,3 +709,7 @@ export const useDesignerStore = create<DesignerState>((set, get) => ({
     });
   },
 }));
+
+if (typeof window !== 'undefined') {
+  (window as unknown as { designerStore: typeof useDesignerStore }).designerStore = useDesignerStore;
+}

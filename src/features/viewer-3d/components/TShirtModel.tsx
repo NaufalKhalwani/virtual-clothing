@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useGLTF, Center, Decal } from '@react-three/drei';
 import * as THREE from 'three';
 import type { GLTF } from 'three-stdlib';
@@ -112,14 +112,18 @@ export const TShirtModel: React.FC = () => {
     );
   }, [surfaces.back?.textureDataUrl]);
 
-  // Dispose GPU textures on unmount
+  // Ref to hold current textures so unmount cleanup does not trigger on state updates
+  const texturesRef = useRef({ frontTexture, backTexture });
+  texturesRef.current = { frontTexture, backTexture };
+
+  // Dispose GPU textures strictly on component unmount
   useEffect(() => {
     return () => {
       shirtMaterial.dispose();
-      frontTexture?.dispose();
-      backTexture?.dispose();
+      texturesRef.current.frontTexture?.dispose();
+      texturesRef.current.backTexture?.dispose();
     };
-  }, [shirtMaterial, frontTexture, backTexture]);
+  }, [shirtMaterial]);
 
   if (!nodes.T_Shirt_male) {
     return null;

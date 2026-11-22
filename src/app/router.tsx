@@ -1,17 +1,45 @@
+import React, { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { LandingPage } from '@/features/landing/pages/LandingPage';
-import { DesignerSelectionPage } from '@/features/designer/pages/DesignerSelectionPage';
-import { TShirtEditorPage } from '@/features/tshirt-editor/pages/TShirtEditorPage';
-import { JerseyEditorPage } from '@/features/jersey-editor/pages/JerseyEditorPage';
-import { ProjectsPage } from '@/features/projects/pages/ProjectsPage';
-import { LoginPage } from '@/features/auth/pages/LoginPage';
-import { RegisterPage } from '@/features/auth/pages/RegisterPage';
-import { VerifyEmailPage } from '@/features/auth/pages/VerifyEmailPage';
-import { AuthCallbackPage } from '@/features/auth/pages/AuthCallbackPage';
-import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
-import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
+import { PageLoadingFallback } from '@/components/common/PageLoadingFallback';
 import { ProtectedRoute } from '@/features/auth/components/ProtectedRoute';
 import { GuestRoute } from '@/features/auth/components/GuestRoute';
+
+// Lazy-loaded routes for optimal initial bundle size and on-demand resource streaming
+const DesignerSelectionPage = lazy(() =>
+  import('@/features/designer/pages/DesignerSelectionPage').then((m) => ({ default: m.DesignerSelectionPage }))
+);
+const TShirtEditorPage = lazy(() =>
+  import('@/features/tshirt-editor/pages/TShirtEditorPage').then((m) => ({ default: m.TShirtEditorPage }))
+);
+const JerseyEditorPage = lazy(() =>
+  import('@/features/jersey-editor/pages/JerseyEditorPage').then((m) => ({ default: m.JerseyEditorPage }))
+);
+const ProjectsPage = lazy(() =>
+  import('@/features/projects/pages/ProjectsPage').then((m) => ({ default: m.ProjectsPage }))
+);
+const LoginPage = lazy(() =>
+  import('@/features/auth/pages/LoginPage').then((m) => ({ default: m.LoginPage }))
+);
+const RegisterPage = lazy(() =>
+  import('@/features/auth/pages/RegisterPage').then((m) => ({ default: m.RegisterPage }))
+);
+const VerifyEmailPage = lazy(() =>
+  import('@/features/auth/pages/VerifyEmailPage').then((m) => ({ default: m.VerifyEmailPage }))
+);
+const AuthCallbackPage = lazy(() =>
+  import('@/features/auth/pages/AuthCallbackPage').then((m) => ({ default: m.AuthCallbackPage }))
+);
+const ForgotPasswordPage = lazy(() =>
+  import('@/features/auth/pages/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage }))
+);
+const ResetPasswordPage = lazy(() =>
+  import('@/features/auth/pages/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage }))
+);
+
+const withSuspense = (component: React.ReactNode) => (
+  <Suspense fallback={<PageLoadingFallback />}>{component}</Suspense>
+);
 
 export const router = createBrowserRouter([
   {
@@ -22,7 +50,7 @@ export const router = createBrowserRouter([
     path: '/login',
     element: (
       <GuestRoute>
-        <LoginPage />
+        {withSuspense(<LoginPage />)}
       </GuestRoute>
     ),
   },
@@ -30,49 +58,49 @@ export const router = createBrowserRouter([
     path: '/register',
     element: (
       <GuestRoute>
-        <RegisterPage />
+        {withSuspense(<RegisterPage />)}
       </GuestRoute>
     ),
   },
   {
     path: '/verify-email',
-    element: <VerifyEmailPage />,
+    element: withSuspense(<VerifyEmailPage />),
   },
   {
     path: '/auth/callback',
-    element: <AuthCallbackPage />,
+    element: withSuspense(<AuthCallbackPage />),
   },
   {
     path: '/forgot-password',
     element: (
       <GuestRoute>
-        <ForgotPasswordPage />
+        {withSuspense(<ForgotPasswordPage />)}
       </GuestRoute>
     ),
   },
   {
     path: '/reset-password',
-    element: <ResetPasswordPage />,
+    element: withSuspense(<ResetPasswordPage />),
   },
   {
     path: '/projects',
     element: (
       <ProtectedRoute>
-        <ProjectsPage />
+        {withSuspense(<ProjectsPage />)}
       </ProtectedRoute>
     ),
   },
   {
     path: '/designer',
-    element: <DesignerSelectionPage />,
+    element: withSuspense(<DesignerSelectionPage />),
   },
   {
     path: '/designer/tshirt',
-    element: <TShirtEditorPage />,
+    element: withSuspense(<TShirtEditorPage />),
   },
   {
     path: '/designer/jersey',
-    element: <JerseyEditorPage />,
+    element: withSuspense(<JerseyEditorPage />),
   },
   {
     path: '*',

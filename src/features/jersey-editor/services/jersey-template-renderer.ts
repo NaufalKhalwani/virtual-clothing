@@ -11,6 +11,56 @@ import {
 } from './jersey-pattern.service';
 
 /**
+ * Serializes design text elements into a valid Fabric.js v7 canvas JSON string
+ * Ensuring clean 100% transparent text backgrounds without any rectangular containers
+ */
+export const serializeElementsToFabricJson = (elements: DesignText[]): string | null => {
+  if (elements.length === 0) return null;
+  return JSON.stringify({
+    version: '7.4.0',
+    objects: elements.map((el) => {
+      const isLight =
+        el.color.startsWith('#F') ||
+        el.color.startsWith('#f') ||
+        el.color.startsWith('#E') ||
+        el.color.startsWith('#e') ||
+        el.color.toLowerCase() === '#ffffff';
+
+      return {
+        type: 'Textbox',
+        version: '7.4.0',
+        originX: 'center',
+        originY: 'center',
+        left: el.x,
+        top: el.y,
+        width: Math.max(el.fontSize * 5, 320),
+        fill: el.color,
+        text: el.content,
+        fontSize: el.fontSize,
+        fontWeight: el.fontWeight || 'bold',
+        fontFamily: el.fontFamily || 'Oswald, sans-serif',
+        textAlign: el.textAlign || 'center',
+        backgroundColor: '', // 100% transparent background, no box
+        shadow: {
+          color: isLight ? 'rgba(0, 0, 0, 0.45)' : 'rgba(255, 255, 255, 0.35)',
+          blur: Math.min(Math.max(el.fontSize * 0.04, 2), 5),
+          offsetX: 0,
+          offsetY: 1.5,
+        },
+        id: el.id,
+        cornerColor: '#2563eb',
+        cornerStrokeColor: '#ffffff',
+        cornerStyle: 'circle',
+        borderColor: '#2563eb',
+        cornerSize: 10,
+        transparentCorners: false,
+        padding: 6,
+      };
+    }),
+  });
+};
+
+/**
  * Builds standard 2D and 3D surface representations for a selected Jersey Template
  */
 export const buildJerseyTemplateSurfaces = (
@@ -50,12 +100,12 @@ export const buildJerseyTemplateSurfaces = (
       type: 'text',
       content: t.text,
       fontFamily: t.fontFamily || 'Montserrat, sans-serif',
-      fontSize: t.fontSize || 32,
+      fontSize: t.fontSize || 34,
       fontWeight: 'bold',
-      color: colors.accent || t.color,
+      color: t.color || colors.secondary,
       textAlign: 'center',
       x: 512,
-      y: 280,
+      y: 260,
       rotation: 0,
       scaleX: 1,
       scaleY: 1,
@@ -71,9 +121,9 @@ export const buildJerseyTemplateSurfaces = (
       type: 'text',
       content: s.text,
       fontFamily: s.fontFamily || 'Oswald, sans-serif',
-      fontSize: s.fontSize || 42,
+      fontSize: s.fontSize || 68,
       fontWeight: 'bold',
-      color: colors.secondary || s.color,
+      color: s.color || colors.secondary,
       textAlign: 'center',
       x: 512,
       y: 490,
@@ -94,12 +144,12 @@ export const buildJerseyTemplateSurfaces = (
       type: 'text',
       content: p.text,
       fontFamily: p.fontFamily || 'Montserrat, sans-serif',
-      fontSize: p.fontSize || 36,
+      fontSize: p.fontSize || 48,
       fontWeight: 'bold',
-      color: colors.secondary || p.color,
+      color: p.color || colors.secondary,
       textAlign: 'center',
       x: 512,
-      y: 240,
+      y: 270,
       rotation: 0,
       scaleX: 1,
       scaleY: 1,
@@ -115,12 +165,12 @@ export const buildJerseyTemplateSurfaces = (
       type: 'text',
       content: n.text,
       fontFamily: n.fontFamily || 'Oswald, sans-serif',
-      fontSize: n.fontSize || 96,
+      fontSize: n.fontSize || 220,
       fontWeight: 'bold',
-      color: colors.accent || n.color,
+      color: n.color || colors.secondary,
       textAlign: 'center',
       x: 512,
-      y: 440,
+      y: 490,
       rotation: 0,
       scaleX: 1,
       scaleY: 1,
@@ -130,21 +180,21 @@ export const buildJerseyTemplateSurfaces = (
   }
 
   // 4. Render 2D Offscreen Canvas Composite for Front & Back (Pattern Base -> Text Top)
-  const frontDataUrl = renderCompositeTexture(frontElements, stripes, 'front');
-  const backDataUrl = renderCompositeTexture(backElements, stripes, 'back');
+  const frontDataUrl = renderCompositeTexture(frontElements, stripes, 'front', 1024, 1024, colors.primary);
+  const backDataUrl = renderCompositeTexture(backElements, stripes, 'back', 1024, 1024, colors.primary);
 
   surfaces.front = {
     color: colors.primary,
     elements: frontElements,
     textureDataUrl: frontDataUrl,
-    canvasJson: null,
+    canvasJson: serializeElementsToFabricJson(frontElements),
   };
 
   surfaces.back = {
     color: colors.primary,
     elements: backElements,
     textureDataUrl: backDataUrl,
-    canvasJson: null,
+    canvasJson: serializeElementsToFabricJson(backElements),
   };
 
   surfaces.leftShoulder = {
@@ -166,16 +216,16 @@ export const buildJerseyTemplateSurfaces = (
 
 /**
  * Composite renderer for Torso Surfaces:
- * 1. Base Fabric Pattern / Stripes
- * 2. Text Protection exclusion boxes
- * 3. Text and Player numbers rendered on top
+ * 1. Base Fabric Pattern / Stripes with optional baseColor fill & micro-knit weave
+ * 2. Clean typography & player numbers rendered directly on fabric without background boxes
  */
 export const renderCompositeTexture = (
   textElements: DesignText[],
   stripes: StripeElementConfig[],
   surface: 'front' | 'back' | string,
   width = 1024,
-  height = 1024
+  height = 1024,
+  baseColor?: string
 ): string => {
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -183,17 +233,33 @@ export const renderCompositeTexture = (
   const ctx = canvas.getContext('2d');
   if (!ctx) return '';
 
-  // 1. Draw fabric pattern & stripes first (Base Layer)
-  drawFabricPatternToContext(ctx, stripes, surface, width, height);
+  // 1. Draw base color + fabric pattern & stripes first (Base Layer)
+  drawFabricPatternToContext(ctx, stripes, surface, width, height, baseColor);
 
-  // 2. Draw text typography elements on top (Protected Top Layer)
+  // 2. Draw clean typography elements directly on top (Athletic Direct Print)
   ctx.globalAlpha = 1.0;
   for (const el of textElements) {
+    ctx.save();
     ctx.font = `${el.fontWeight || 'bold'} ${el.fontSize}px ${el.fontFamily}`;
-    ctx.fillStyle = el.color;
     ctx.textAlign = el.textAlign || 'center';
     ctx.textBaseline = 'middle';
+
+    // Athletic vinyl contour separation for high contrast across fabric lines
+    const isLight =
+      el.color.startsWith('#F') ||
+      el.color.startsWith('#f') ||
+      el.color.startsWith('#E') ||
+      el.color.startsWith('#e') ||
+      el.color.toLowerCase() === '#ffffff';
+
+    ctx.shadowColor = isLight ? 'rgba(0, 0, 0, 0.45)' : 'rgba(255, 255, 255, 0.35)';
+    ctx.shadowBlur = Math.min(Math.max(el.fontSize * 0.04, 2), 5);
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 1.5;
+
+    ctx.fillStyle = el.color;
     ctx.fillText(el.content, el.x, el.y);
+    ctx.restore();
   }
 
   return canvas.toDataURL('image/png');
@@ -207,10 +273,11 @@ export const compositeFabricArtworkWithPattern = async (
   stripes: StripeElementConfig[],
   surface: 'front' | 'back' | string,
   width = 1024,
-  height = 1024
+  height = 1024,
+  baseColor?: string
 ): Promise<string | null> => {
   const hasStripes = stripes.some((s) => s.surface === 'both' || s.surface === surface);
-  if (!hasStripes && !fabricDataUrl) return null;
+  if (!hasStripes && !fabricDataUrl && !baseColor) return null;
 
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -218,8 +285,8 @@ export const compositeFabricArtworkWithPattern = async (
   const ctx = canvas.getContext('2d');
   if (!ctx) return null;
 
-  // 1. Draw fabric pattern & stripes first
-  drawFabricPatternToContext(ctx, stripes, surface, width, height);
+  // 1. Draw fabric pattern & stripes first with baseColor
+  drawFabricPatternToContext(ctx, stripes, surface, width, height, baseColor);
 
   // 2. Draw user's artwork & text from Fabric canvas on top
   if (fabricDataUrl) {

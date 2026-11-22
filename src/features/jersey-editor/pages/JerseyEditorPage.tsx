@@ -1,16 +1,39 @@
 import React, { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { EditorToolbar } from '@/features/tshirt-editor/components/EditorToolbar';
 import { JerseyEditPanel } from '../components/JerseyEditPanel';
 import { JerseyViewer3D } from '../components/JerseyViewer3D';
 import { useDesignerStore } from '@/stores/designer.store';
+import { useUIStore } from '@/stores/ui.store';
+import type { JerseyTemplateId } from '../types/jersey-template.types';
+import type { CameraPreset } from '@/constants/design.constants';
 
 export const JerseyEditorPage: React.FC = () => {
   const setGarmentType = useDesignerStore((state) => state.setGarmentType);
+  const setJerseyTemplate = useDesignerStore((state) => state.setJerseyTemplate);
+  const selectSurface = useDesignerStore((state) => state.selectSurface);
+  const setActiveCameraPreset = useUIStore((state) => state.setActiveCameraPreset);
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     setGarmentType('jersey');
-  }, [setGarmentType]);
+
+    const templateParam = searchParams.get('template') as JerseyTemplateId | null;
+    if (templateParam) {
+      setJerseyTemplate(templateParam);
+    }
+
+    const cameraParam = searchParams.get('camera') as CameraPreset | null;
+    if (cameraParam) {
+      setActiveCameraPreset(cameraParam);
+      if (cameraParam === 'back') {
+        selectSurface('back');
+      } else if (cameraParam === 'front') {
+        selectSurface('front');
+      }
+    }
+  }, [setGarmentType, setJerseyTemplate, selectSurface, setActiveCameraPreset, searchParams]);
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-white dark:bg-slate-950 transition-colors duration-200">

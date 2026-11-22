@@ -1,4 +1,4 @@
-import { Canvas } from 'fabric';
+import { Canvas, FabricImage } from 'fabric';
 import JSZip from 'jszip';
 import type { SurfaceDesign, GarmentType } from '@/types/designer.types';
 import type { Export2DOptions, ExportResolution } from '../types/export.types';
@@ -32,6 +32,14 @@ export const renderSurfaceToDataUrl = async (options: RenderSurfaceOptions): Pro
 
   if (surfaceData?.canvasJson) {
     await loadCanvasFromJson(canvas, surfaceData.canvasJson);
+  } else if (surfaceData?.textureDataUrl) {
+    try {
+      const img = await FabricImage.fromURL(surfaceData.textureDataUrl, { crossOrigin: 'anonymous' });
+      img.scaleToWidth(1024);
+      canvas.add(img);
+    } catch {
+      // Fallback silently if texture fails to load
+    }
   }
 
   // Set background fill according to selection

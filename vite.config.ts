@@ -24,6 +24,8 @@ export default defineConfig({
       output: {
         manualChunks: {
           'three-vendor': ['three', '@react-three/fiber', '@react-three/drei'],
+          'fabric-vendor': ['fabric'],
+          'supabase-vendor': ['@supabase/supabase-js'],
           'react-vendor': ['react', 'react-dom', 'react-router-dom', 'zustand'],
         },
       },

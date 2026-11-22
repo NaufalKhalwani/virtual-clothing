@@ -1,4 +1,10 @@
-export type JerseyTemplateCategory = 'classic' | 'modern' | 'athletic' | 'elite';
+export type JerseyTemplateCategory =
+  | 'classic'
+  | 'modern'
+  | 'athletic'
+  | 'elite'
+  | 'vintage'
+  | 'club-inspired';
 
 export type JerseyTemplateId =
   // Classic & Heritage
@@ -21,6 +27,28 @@ export type JerseyTemplateId =
   | 'signature-stripes'
   | 'royal-edition'
   | 'champion-gold'
+  // Phase 8.4: Vintage Football Collection
+  | 'vintage-80s-classic'
+  | 'vintage-90s-geometric'
+  | 'vintage-90s-sublimated'
+  | 'vintage-retro-hoops'
+  | 'vintage-vertical-stripes'
+  | 'vintage-cream-heritage'
+  | 'vintage-90s-colorblock'
+  | 'vintage-polo-collar'
+  | 'vintage-diagonal-sash'
+  | 'vintage-minimal-2000s'
+  // Phase 8.4: European Elite Club Inspired Collection
+  | 'club-madrid-white-gold'
+  | 'club-manchester-sky'
+  | 'club-manchester-red'
+  | 'club-catalan-blaugrana'
+  | 'club-north-london-red'
+  | 'club-merseyside-red'
+  | 'club-milan-rossoneri'
+  | 'club-turin-bianconeri'
+  | 'club-munich-red'
+  | 'club-milan-nerazzurri'
   // Backward-compatibility aliases
   | 'classic-hoops'
   | 'vertical-stripes'
@@ -45,7 +73,13 @@ export type StripeOrientation =
   | 'split'
   | 'panel'
   | 'gradient'
-  | 'geometric';
+  | 'geometric'
+  | 'chevron'
+  | 'side-panel'
+  | 'retro-geometric'
+  | 'tonal-jacquard'
+  | 'multi-width-stripes'
+  | 'colorblock';
 
 export type StripeSurfaceScope =
   | 'front'
@@ -68,7 +102,7 @@ export interface StripeElementConfig {
   color: string;              // Primary stripe color
   secondaryColor?: string;    // Optional secondary stripe color for alternating patterns
   opacity: number;
-  protectText?: boolean;      // Clean exclusion zone around numbers & sponsors
+  protectText?: boolean;      // Deprecated: preserved for backward compatibility with existing saved projects
   angle?: number;             // Angle for diagonal / sash stripes
 }
 
@@ -79,7 +113,13 @@ export type SleevePatternType =
   | 'diagonal-stripes'
   | 'geometric'
   | 'gradient'
-  | 'cuff-accent';
+  | 'cuff-accent'
+  | 'speed-bars'
+  | 'chevrons'
+  | 'retro-geometric'
+  | 'tonal-jacquard'
+  | 'multi-width-stripes'
+  | 'colorblock';
 
 export interface SleevePatternConfig {
   type: SleevePatternType;

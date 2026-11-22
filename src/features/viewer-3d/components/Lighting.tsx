@@ -1,5 +1,5 @@
 import React from 'react';
-import { AccumulativeShadows, RandomizedLight } from '@react-three/drei';
+import { ContactShadows } from '@react-three/drei';
 
 export const Lighting: React.FC = () => {
   return (
@@ -30,23 +30,13 @@ export const Lighting: React.FC = () => {
       />
 
       {/* Soft Ground Contact Shadow */}
-      <AccumulativeShadows
-        position={[0, -0.75, 0]}
-        scale={6}
-        alphaTest={0.85}
-        opacity={0.75}
-        frames={40}
-        blend={100}
-      >
-        <RandomizedLight
-          amount={4}
-          radius={5}
-          ambient={0.5}
-          intensity={1}
-          position={[4, 5, 4]}
-          bias={0.001}
-        />
-      </AccumulativeShadows>
+      <ContactShadows
+        position={[0, -0.58, 0]}
+        opacity={0.5}
+        scale={4}
+        blur={1.8}
+        far={1.2}
+      />
     </>
   );
 };
